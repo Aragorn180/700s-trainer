@@ -47,6 +47,7 @@
       @keyframes rank-up { 0% { transform: scale(1); } 50% { transform: scale(1.2); filter: brightness(1.5); } 100% { transform: scale(1); } }
       @keyframes flash-green { 0% { box-shadow: inset 0 0 60px #10B98150; } 100% { box-shadow: none; } }
       @keyframes flash-red { 0% { box-shadow: inset 0 0 60px #EF444450; } 100% { box-shadow: none; } }
+      @keyframes candle-appear { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
 
       .animate-slide-up { animation: slide-up 0.4s ease-out; }
       .animate-fade-in { animation: fade-in 0.3s ease-out; }
@@ -113,15 +114,16 @@ const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
 const STORAGE_KEY = '700s_dojo_v1';
 
+// PATCH 4: Rebalanced XP requirements for ~30 days at 4-5h/day
 const RANKS = [
   { id: 'iron', name: 'Iron', color: '#8B8B8B', xpRequired: 0, label: 'Debutant', icon: '\u2B21' },
-  { id: 'bronze', name: 'Bronze', color: '#CD7F32', xpRequired: 500, label: 'Apprenti', icon: '\u2B21' },
-  { id: 'silver', name: 'Silver', color: '#C0C0C0', xpRequired: 1500, label: 'Initie', icon: '\u2B21' },
-  { id: 'gold', name: 'Gold', color: '#FFD700', xpRequired: 3500, label: 'Confirme', icon: '\u2B21' },
-  { id: 'platinum', name: 'Platinum', color: '#00CED1', xpRequired: 6500, label: 'Tacticien', icon: '\u2B21' },
-  { id: 'diamond', name: 'Diamond', color: '#B9F2FF', xpRequired: 10000, label: 'Expert', icon: '\uD83D\uDC8E' },
-  { id: 'master', name: 'Master', color: '#9B59B6', xpRequired: 15000, label: 'Maitre', icon: '\uD83D\uDC51' },
-  { id: 'radiant', name: 'Radiant', color: '#FFE566', xpRequired: 25000, label: 'Legende', icon: '\u2726' },
+  { id: 'bronze', name: 'Bronze', color: '#CD7F32', xpRequired: 2000, label: 'Apprenti', icon: '\u2B21' },
+  { id: 'silver', name: 'Silver', color: '#C0C0C0', xpRequired: 6000, label: 'Initie', icon: '\u2B21' },
+  { id: 'gold', name: 'Gold', color: '#FFD700', xpRequired: 15000, label: 'Confirme', icon: '\u2B21' },
+  { id: 'platinum', name: 'Platinum', color: '#00CED1', xpRequired: 30000, label: 'Tacticien', icon: '\u2B21' },
+  { id: 'diamond', name: 'Diamond', color: '#B9F2FF', xpRequired: 50000, label: 'Expert', icon: '\uD83D\uDC8E' },
+  { id: 'master', name: 'Master', color: '#9B59B6', xpRequired: 80000, label: 'Maitre', icon: '\uD83D\uDC51' },
+  { id: 'radiant', name: 'Radiant', color: '#FFE566', xpRequired: 120000, label: 'Legende', icon: '\u2726' },
 ];
 
 const SKILL_BRANCHES = {
@@ -257,10 +259,10 @@ const QUIZ_DB = [
 // ============================================================
 
 const SCENARIOS_DB = [
-  { id:'scenario_1', title:'Le Turtle Soup de Londres', rank:'bronze', xpReward:50, context:'Mercredi 8h30 Paris. Weekly EURUSD bullish. Daily pullback vers OB a 1.0850.', steps:[{q:'Premiere action ?',options:['Entry 5min','Verifier HTF','Twitter','Ordre limite'],correct:1,feedback:'HTF FIRST.'},{q:'4H purge low Asian, revient dans range. C\'est quoi ?',options:['Breakout bearish','Turtle Soup','FVG','Rien'],correct:1,feedback:'TS ! Purge + retour.'},{q:'Ou placer SL ?',options:['10 pips sous entry','Au-dela meche manipulation','Swing low Daily','Pas de SL'],correct:1,feedback:'SL au-dela de la manipulation.'},{q:'RR 2.8:1, setup A. Risk ?',options:['5%','0.50%','1-3%','PASS'],correct:2,feedback:'A = max 3%.'}] },
-  { id:'scenario_2', title:'Le piege du FOMC', rank:'silver', xpReward:75, context:'Jeudi. FOMC ce soir. Setup Model 1 sur GBPUSD.', steps:[{q:'Premier element ?',options:['RR','Calendrier','Spread','Autres traders'],correct:1,feedback:'Calendrier non-negociable.'},{q:'FOMC ce soir. Beau setup. Decision ?',options:['0.10%','PASS','Couper avant','Demander avis'],correct:1,feedback:'PASS. La regle est la regle.'},{q:'Tu as passe. +150 pips dans ta direction post-FOMC.',options:['Tu notes respect de la regle','Entrer tard','Augmenter risk','Prochain fois entrer'],correct:0,feedback:'Le resultat ne change pas la qualite de la decision.'}] },
-  { id:'scenario_3', title:'Double Purge Weekly', rank:'gold', xpReward:100, context:'BTCUSD Weekly : purge high ET low. Monthly bullish 3 mois.', steps:[{q:'Ce pattern ?',options:['Turtle Soup','Double Purge','Butterfly','OTE'],correct:1,feedback:'Double Purge.'},{q:'Monthly bullish + DP weekly. Grade ?',options:['B+','A','A+','C'],correct:2,feedback:'DP + Monthly = A+.'},{q:'Comment entrer ?',options:['Lundi open','TS ou Model 1 sur Daily/4H','Buy limit low','Attendre vendredi'],correct:1,feedback:'Descendre au Daily/4H.'},{q:'RR 3.5:1, A+ confirme. Risk ?',options:['0.50%','2%','3-5%','1%'],correct:2,feedback:'A+ = 3-5% justifie.'}] },
-  { id:'scenario_4', title:'Le Revenge Trading', rank:'platinum', xpReward:100, context:'3 pertes cette semaine. Mal dormi. EURUSD monte sans toi.', steps:[{q:'Emotion et danger ?',options:['Motivation','FOMO + frustration = revenge','Rien','Colere justifiee'],correct:1,feedback:'FOMO + frustration = danger.'},{q:'"Me refaire". Setup B. Decision ?',options:['ENTRY','Double risk','FERME LES CHARTS','Risk normal'],correct:2,feedback:'REVENGE TRADING = danger #1.'},{q:'Vendredi, repose. Setup A.',options:['Risk 3%','Risk reduit 0.50-1%','Risk augmente','Pas trader vendredi'],correct:1,feedback:'En drawdown = risk REDUIT.'}] },
+  { id:'scenario_1', title:'Le Turtle Soup de Londres', rank:'bronze', xpReward:40, context:'Mercredi 8h30 Paris. Weekly EURUSD bullish. Daily pullback vers OB a 1.0850.', steps:[{q:'Premiere action ?',options:['Entry 5min','Verifier HTF','Twitter','Ordre limite'],correct:1,feedback:'HTF FIRST.'},{q:'4H purge low Asian, revient dans range. C\'est quoi ?',options:['Breakout bearish','Turtle Soup','FVG','Rien'],correct:1,feedback:'TS ! Purge + retour.'},{q:'Ou placer SL ?',options:['10 pips sous entry','Au-dela meche manipulation','Swing low Daily','Pas de SL'],correct:1,feedback:'SL au-dela de la manipulation.'},{q:'RR 2.8:1, setup A. Risk ?',options:['5%','0.50%','1-3%','PASS'],correct:2,feedback:'A = max 3%.'}] },
+  { id:'scenario_2', title:'Le piege du FOMC', rank:'silver', xpReward:40, context:'Jeudi. FOMC ce soir. Setup Model 1 sur GBPUSD.', steps:[{q:'Premier element ?',options:['RR','Calendrier','Spread','Autres traders'],correct:1,feedback:'Calendrier non-negociable.'},{q:'FOMC ce soir. Beau setup. Decision ?',options:['0.10%','PASS','Couper avant','Demander avis'],correct:1,feedback:'PASS. La regle est la regle.'},{q:'Tu as passe. +150 pips dans ta direction post-FOMC.',options:['Tu notes respect de la regle','Entrer tard','Augmenter risk','Prochain fois entrer'],correct:0,feedback:'Le resultat ne change pas la qualite de la decision.'}] },
+  { id:'scenario_3', title:'Double Purge Weekly', rank:'gold', xpReward:50, context:'BTCUSD Weekly : purge high ET low. Monthly bullish 3 mois.', steps:[{q:'Ce pattern ?',options:['Turtle Soup','Double Purge','Butterfly','OTE'],correct:1,feedback:'Double Purge.'},{q:'Monthly bullish + DP weekly. Grade ?',options:['B+','A','A+','C'],correct:2,feedback:'DP + Monthly = A+.'},{q:'Comment entrer ?',options:['Lundi open','TS ou Model 1 sur Daily/4H','Buy limit low','Attendre vendredi'],correct:1,feedback:'Descendre au Daily/4H.'},{q:'RR 3.5:1, A+ confirme. Risk ?',options:['0.50%','2%','3-5%','1%'],correct:2,feedback:'A+ = 3-5% justifie.'}] },
+  { id:'scenario_4', title:'Le Revenge Trading', rank:'platinum', xpReward:50, context:'3 pertes cette semaine. Mal dormi. EURUSD monte sans toi.', steps:[{q:'Emotion et danger ?',options:['Motivation','FOMO + frustration = revenge','Rien','Colere justifiee'],correct:1,feedback:'FOMO + frustration = danger.'},{q:'"Me refaire". Setup B. Decision ?',options:['ENTRY','Double risk','FERME LES CHARTS','Risk normal'],correct:2,feedback:'REVENGE TRADING = danger #1.'},{q:'Vendredi, repose. Setup A.',options:['Risk 3%','Risk reduit 0.50-1%','Risk augmente','Pas trader vendredi'],correct:1,feedback:'En drawdown = risk REDUIT.'}] },
 ];
 
 // ============================================================
@@ -305,7 +307,7 @@ const CHALLENGE_30 = [
 // ============================================================
 
 const CHART_COLORS = {
-  bg: '#0D0D15',
+  bg: '#0B0B14',
   grid: '#1A1A25',
   bullish: '#10B981',
   bearish: '#EF4444',
@@ -330,6 +332,9 @@ function drawCandlestickChart(ctx, candles, width, height, options = {}) {
     showCandleNumbers = true,
     crosshair = null,
     interactionMode = null,
+    zoomLabel = null,
+    animateLastCandle = false,
+    priceScaleOffset = 0,
   } = options;
 
   ctx.clearRect(0, 0, width, height);
@@ -354,6 +359,14 @@ function drawCandlestickChart(ctx, candles, width, height, options = {}) {
   const priceRange = maxP - minP || 1;
   const pPad = priceRange * 0.08;
   minP -= pPad; maxP += pPad;
+
+  // Apply price scale offset for vertical zoom
+  const scaleExpand = priceScaleOffset * 0.002;
+  const midP = (minP + maxP) / 2;
+  const halfRange = (maxP - minP) / 2;
+  minP = midP - halfRange * (1 + scaleExpand);
+  maxP = midP + halfRange * (1 + scaleExpand);
+
   const totalRange = maxP - minP;
 
   const priceToY = (p) => padding.top + chartH * (1 - (p - minP) / totalRange);
@@ -485,6 +498,14 @@ function drawCandlestickChart(ctx, candles, width, height, options = {}) {
     ctx.fillText(price.toFixed(price > 100 ? 0 : 4), width - padding.right + 3, crosshair.y + 3);
   }
 
+  // PATCH 5: Zoom label
+  if (zoomLabel) {
+    ctx.fillStyle = '#D4A85360';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(zoomLabel, padding.left + 5, padding.top + 14);
+  }
+
   return { padding, candleW, chartW, chartH, minP, maxP, totalRange, priceToY, yToPrice, startIdx, endIdx };
 }
 
@@ -529,15 +550,63 @@ function makeTrendCandles(start, count, vol, direction) {
   return candles;
 }
 
+// PATCH 2: Helper to make tight candles (no FVG gaps)
+function makeTightCandles(start, count, vol, direction) {
+  const candles = [];
+  let price = start;
+  for (let i = 0; i < count; i++) {
+    const dir = Math.random() < 0.75 ? direction : -direction;
+    const bodySize = rnd(vol * 0.2, vol * 0.8);
+    const close = dir > 0 ? price + bodySize : price - bodySize;
+    // Keep wicks small to prevent FVG gaps
+    const wickUp = rnd(0, vol * 0.15);
+    const wickDn = rnd(0, vol * 0.15);
+    const high = Math.max(price, close) + wickUp;
+    const low = Math.min(price, close) - wickDn;
+    candles.push({ open: +price.toFixed(5), high: +high.toFixed(5), low: +low.toFixed(5), close: +close.toFixed(5) });
+    price = close;
+  }
+  return candles;
+}
+
+// PATCH 2: Helper to make trend without equal highs/lows (no TS structure)
+function makeTrendNoEqualLevels(start, count, vol, direction) {
+  const candles = [];
+  let price = start;
+  let prevLow = Infinity;
+  let prevHigh = -Infinity;
+  for (let i = 0; i < count; i++) {
+    const dir = Math.random() < 0.8 ? direction : -direction;
+    const bodySize = rnd(vol * 0.3, vol * 1.0);
+    const close = dir > 0 ? price + bodySize : price - bodySize;
+    const wickUp = rnd(vol * 0.1, vol * 0.4);
+    const wickDn = rnd(vol * 0.1, vol * 0.4);
+    let high = Math.max(price, close) + wickUp;
+    let low = Math.min(price, close) - wickDn;
+    // Ensure no equal levels by adding progressive offset
+    if (direction > 0) {
+      low = low + i * vol * 0.1;
+      high = high + i * vol * 0.15;
+    } else {
+      low = low - i * vol * 0.15;
+      high = high - i * vol * 0.1;
+    }
+    candles.push({ open: +price.toFixed(5), high: +high.toFixed(5), low: +low.toFixed(5), close: +close.toFixed(5) });
+    price = close;
+  }
+  return candles;
+}
+
+// PATCH 2: Improved generators that suppress secondary patterns
 function generateTurtleSoupChart() {
   const basePrice = rnd(1.05, 1.25);
   const vol = rnd(0.002, 0.006);
   const candles = [];
 
-  // Build up: slight uptrend then range with equal lows
-  const rangeLow = basePrice - vol * 2;
-  candles.push(...makeTrendCandles(basePrice, 3, vol, -1));
-  candles.push(...makeRangeCandles(candles[candles.length-1].close, 5, vol, basePrice - vol));
+  // Build up: slight downtrend then range with equal lows
+  // Use tight candles to avoid FVG gaps
+  candles.push(...makeTightCandles(basePrice, 3, vol, -1));
+  candles.push(...makeRangeCandles(candles[candles.length-1].close, 5, vol * 0.5, basePrice - vol));
 
   // Create equal lows zone
   const eqLow = Math.min(...candles.slice(3).map(c => c.low));
@@ -550,16 +619,17 @@ function generateTurtleSoupChart() {
   candles.push({ open: +manipOpen.toFixed(5), high: +manipHigh.toFixed(5), low: +purgeLow.toFixed(5), close: +manipClose.toFixed(5) });
   const manipIdx = candles.length - 1;
 
-  // Aggressive reversal up (displacement)
-  candles.push(...makeTrendCandles(manipClose, 5, vol * 1.3, 1));
+  // Aggressive reversal up (displacement) — use tight candles to avoid secondary FVG
+  candles.push(...makeTightCandles(manipClose, 5, vol * 1.3, 1));
 
   // More continuation
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 4, vol * 0.8, 1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 4, vol * 0.8, 1));
 
   return {
     candles,
     pattern: 'turtle_soup',
     patternName: 'Turtle Soup',
+    dominantPattern: 'turtle_soup',
     direction: 'bullish',
     keyCandles: [manipIdx],
     entryZone: { price: manipClose + vol * 0.3, sl: purgeLow - vol * 0.3, tp: manipClose + vol * 5 },
@@ -575,34 +645,34 @@ function generateDoublePurgeChart() {
   const vol = rnd(0.002, 0.005);
   const candles = [];
 
-  // Range phase
+  // Range phase — make it messy so individual purges don't look like clean TS
   candles.push(...makeRangeCandles(basePrice, 5, vol, basePrice));
   const rangeHigh = Math.max(...candles.map(c => c.high));
   const rangeLow = Math.min(...candles.map(c => c.low));
 
-  // Purge HIGH first
+  // Purge HIGH first — messy, not clean reversal (no TS look)
   const purgeHighOpen = candles[candles.length-1].close;
-  const purgeHighHigh = rangeHigh + vol * 1.5;
-  const purgeHighClose = purgeHighOpen - vol * 0.3;
+  const purgeHighHigh = rangeHigh + vol * 1.2;
+  const purgeHighClose = purgeHighOpen - vol * 0.1; // Small close, not aggressive reversal
   candles.push({ open: +purgeHighOpen.toFixed(5), high: +purgeHighHigh.toFixed(5), low: +(purgeHighClose - vol * 0.2).toFixed(5), close: +purgeHighClose.toFixed(5) });
   const purgeHighIdx = candles.length - 1;
 
-  // Small pullback
-  candles.push(...makeTrendCandles(purgeHighClose, 2, vol * 0.5, -1));
+  // Messy transition (not clean, multiple candles)
+  candles.push(...makeRangeCandles(purgeHighClose, 3, vol * 0.5, (purgeHighClose + rangeLow) / 2));
 
-  // Purge LOW
+  // Purge LOW — also messy
   const purgeLowOpen = candles[candles.length-1].close;
-  const purgeLowLow = rangeLow - vol * 1.5;
-  const purgeLowClose = purgeLowOpen + vol * 0.5;
+  const purgeLowLow = rangeLow - vol * 1.2;
+  const purgeLowClose = purgeLowOpen + vol * 0.3;
   candles.push({ open: +purgeLowOpen.toFixed(5), high: +(purgeLowClose + vol * 0.2).toFixed(5), low: +purgeLowLow.toFixed(5), close: +purgeLowClose.toFixed(5) });
   const purgeLowIdx = candles.length - 1;
 
-  // Expansion up (bullish resolution)
-  candles.push(...makeTrendCandles(purgeLowClose, 6, vol * 1.2, 1));
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 3, vol * 0.7, 1));
+  // Expansion up (bullish resolution) — tight candles
+  candles.push(...makeTightCandles(purgeLowClose, 6, vol * 1.2, 1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 0.7, 1));
 
   return {
-    candles, pattern: 'double_purge', patternName: 'Double Purge', direction: 'bullish',
+    candles, pattern: 'double_purge', patternName: 'Double Purge', dominantPattern: 'double_purge', direction: 'bullish',
     keyCandles: [purgeHighIdx, purgeLowIdx],
     entryZone: { price: purgeLowClose + vol * 0.4, sl: purgeLowLow - vol * 0.3, tp: purgeHighHigh + vol * 2 },
     zones: [
@@ -625,36 +695,30 @@ function generateCRTChart(valid = true) {
 
   if (valid) {
     if (isBullish) {
-      // OLHC: Open, goes to Low, then High, Close near High
       const o = candles[candles.length-1].close;
-      // Down candle first (fakeout)
       candles.push(makeCandle(o, -1, vol * 0.8));
-      // Then strong up
-      candles.push(...makeTrendCandles(candles[candles.length-1].close, 3, vol * 1.2, 1));
-      // Close near high
+      candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 1.2, 1));
       const lastP = candles[candles.length-1].close;
       candles.push(makeCandle(lastP, 1, vol * 0.5));
     } else {
-      // OHLC: Open, goes to High, then Low, Close near Low
       const o = candles[candles.length-1].close;
       candles.push(makeCandle(o, 1, vol * 0.8));
-      candles.push(...makeTrendCandles(candles[candles.length-1].close, 3, vol * 1.2, -1));
+      candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 1.2, -1));
       const lastP = candles[candles.length-1].close;
       candles.push(makeCandle(lastP, -1, vol * 0.5));
     }
   } else {
-    // Invalid CRT: choppy, no clear sequence
     candles.push(...makeRangeCandles(candles[candles.length-1].close, 5, vol * 1.2, basePrice));
   }
 
-  // Continuation
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 4, vol * 0.8, isBullish ? 1 : -1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 4, vol * 0.8, isBullish ? 1 : -1));
 
   const crtStart = 4;
   return {
     candles,
     pattern: valid ? 'crt' : 'invalid_crt',
     patternName: valid ? `CRT ${isBullish ? 'Bullish (OLHC)' : 'Bearish (OHLC)'}` : 'CRT Invalide',
+    dominantPattern: valid ? 'crt' : 'invalid_crt',
     direction: isBullish ? 'bullish' : 'bearish',
     keyCandles: [crtStart, crtStart + 1, crtStart + 2],
     entryZone: valid ? { price: candles[crtStart + 2]?.close || basePrice, sl: isBullish ? candles[crtStart]?.low - vol * 0.3 : candles[crtStart]?.high + vol * 0.3, tp: isBullish ? candles[crtStart + 2]?.close + vol * 4 : candles[crtStart + 2]?.close - vol * 4 } : null,
@@ -670,8 +734,8 @@ function generateMSSChart() {
   const vol = rnd(0.002, 0.005);
   const candles = [];
 
-  // Downtrend (creating lower highs, lower lows)
-  candles.push(...makeTrendCandles(basePrice, 6, vol, -1));
+  // Downtrend (creating lower highs, lower lows) — no equal levels
+  candles.push(...makeTrendNoEqualLevels(basePrice, 6, vol, -1));
 
   // MSS: break above last lower high
   const lastHigh = Math.max(...candles.slice(-3).map(c => c.high));
@@ -686,12 +750,12 @@ function generateMSSChart() {
   candles.push({ open: +candles[candles.length-1].close.toFixed(5), high: +(candles[candles.length-1].close + vol * 0.2).toFixed(5), low: +midPoint.toFixed(5), close: +(midPoint + vol * 0.3).toFixed(5) });
   const oteIdx = candles.length - 1;
 
-  // Expansion up
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 5, vol * 1.3, 1));
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 3, vol * 0.8, 1));
+  // Expansion up — tight candles
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 5, vol * 1.3, 1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 0.8, 1));
 
   return {
-    candles, pattern: 'mss_ote', patternName: 'MSS + OTE', direction: 'bullish',
+    candles, pattern: 'mss_ote', patternName: 'MSS + OTE', dominantPattern: 'mss_ote', direction: 'bullish',
     keyCandles: [mssIdx, oteIdx],
     entryZone: { price: midPoint + vol * 0.3, sl: midPoint - vol * 1.5, tp: mssClose + vol * 5 },
     zones: [
@@ -709,26 +773,23 @@ function generateManipulationTrap() {
   const vol = rnd(0.002, 0.005);
   const candles = [];
 
-  // Looks like a Turtle Soup but isn't
   candles.push(...makeRangeCandles(basePrice, 5, vol, basePrice));
   const rangeLow = Math.min(...candles.map(c => c.low));
 
   // Fake purge: breaks below but closes below too (breakout, not TS)
   const fakeOpen = candles[candles.length-1].close;
   const fakeLow = rangeLow - vol * 2;
-  const fakeClose = rangeLow - vol * 0.8; // Closes BELOW = real breakout
+  const fakeClose = rangeLow - vol * 0.8;
   candles.push({ open: +fakeOpen.toFixed(5), high: +(fakeOpen + vol * 0.2).toFixed(5), low: +fakeLow.toFixed(5), close: +fakeClose.toFixed(5) });
   const trapIdx = candles.length - 1;
 
-  // Small bounce (looks like reversal but fails)
   candles.push(makeCandle(fakeClose, 1, vol * 0.4));
   candles.push(makeCandle(candles[candles.length-1].close, 1, vol * 0.3));
 
-  // Continuation down (the trap springs)
   candles.push(...makeTrendCandles(candles[candles.length-1].close, 6, vol * 1.1, -1));
 
   return {
-    candles, pattern: 'manipulation_trap', patternName: 'Piege (Faux Turtle Soup)', direction: 'bearish',
+    candles, pattern: 'manipulation_trap', patternName: 'Piege (Faux Turtle Soup)', dominantPattern: 'manipulation_trap', direction: 'bearish',
     keyCandles: [trapIdx],
     entryZone: null,
     zones: [{ type: 'ob', high: fakeOpen, low: fakeLow, startCandle: trapIdx, endCandle: trapIdx, label: 'PIEGE' }],
@@ -743,13 +804,14 @@ function generateFVGChart() {
   const vol = rnd(0.003, 0.006);
   const candles = [];
 
-  candles.push(...makeRangeCandles(basePrice, 4, vol * 0.7, basePrice));
+  // PATCH 2: Use trend without equal levels (no TS structure)
+  candles.push(...makeTrendNoEqualLevels(basePrice, 4, vol * 0.5, 1));
 
   // Create FVG: 3 candles where wick1 doesn't touch wick3
   const fvgOpen = candles[candles.length-1].close;
   const c1 = makeCandle(fvgOpen, 1, vol * 0.5);
   candles.push(c1);
-  // Big displacement candle
+  // Big displacement candle — creates the gap
   const c2 = { open: +c1.close.toFixed(5), high: +(c1.close + vol * 3).toFixed(5), low: +(c1.close - vol * 0.1).toFixed(5), close: +(c1.close + vol * 2.5).toFixed(5) };
   candles.push(c2);
   // C3 opens above c1 high with gap
@@ -758,13 +820,13 @@ function generateFVGChart() {
   candles.push(c3);
   const fvgIdx = candles.length - 2;
 
-  candles.push(...makeTrendCandles(c3.close, 3, vol * 0.5, 1));
-  // Retrace to FVG
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 3, vol * 0.6, -1));
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 4, vol * 0.8, 1));
+  // Continuation then retrace — tight to avoid secondary patterns
+  candles.push(...makeTightCandles(c3.close, 3, vol * 0.5, 1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 0.6, -1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 4, vol * 0.8, 1));
 
   return {
-    candles, pattern: 'fvg', patternName: 'Fair Value Gap (FVG)', direction: 'bullish',
+    candles, pattern: 'fvg', patternName: 'Fair Value Gap (FVG)', dominantPattern: 'fvg', direction: 'bullish',
     keyCandles: [fvgIdx - 1, fvgIdx, fvgIdx + 1],
     entryZone: { price: (c1.high + c3.low) / 2, sl: c1.high - vol, tp: c2.high + vol * 2 },
     zones: [{ type: 'fvg', high: c3.low, low: c1.high, startCandle: fvgIdx - 1, endCandle: fvgIdx + 1, label: 'FVG' }],
@@ -778,18 +840,19 @@ function generateOBChart() {
   const vol = rnd(0.003, 0.006);
   const candles = [];
 
-  candles.push(...makeRangeCandles(basePrice, 3, vol * 0.6, basePrice));
+  // PATCH 2: Use tight candles to avoid FVG gaps
+  candles.push(...makeTightCandles(basePrice, 3, vol * 0.5, -1));
 
   // Last bearish candle before displacement up = OB
   const obCandle = makeCandle(candles[candles.length-1].close, -1, vol * 0.8);
   candles.push(obCandle);
   const obIdx = candles.length - 1;
 
-  // Displacement up
-  candles.push(...makeTrendCandles(obCandle.close, 4, vol * 1.5, 1));
+  // Displacement up — tight candles to avoid secondary FVG
+  candles.push(...makeTightCandles(obCandle.close, 4, vol * 1.5, 1));
 
-  // Retest OB
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 3, vol * 0.7, -1));
+  // Retest OB — tight candles
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 0.7, -1));
   // Bounce from OB
   const bouncePrice = obCandle.high + vol * 0.2;
   const lastC = candles[candles.length-1];
@@ -799,10 +862,10 @@ function generateOBChart() {
     candles.push(makeCandle(lastC.close, 1, vol * 0.8));
   }
 
-  candles.push(...makeTrendCandles(candles[candles.length-1].close, 4, vol * 1.0, 1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 4, vol * 1.0, 1));
 
   return {
-    candles, pattern: 'ob', patternName: 'Order Block', direction: 'bullish',
+    candles, pattern: 'ob', patternName: 'Order Block', dominantPattern: 'ob', direction: 'bullish',
     keyCandles: [obIdx],
     entryZone: { price: obCandle.high, sl: obCandle.low - vol * 0.5, tp: obCandle.high + vol * 6 },
     zones: [{ type: 'ob', high: obCandle.open, low: obCandle.low, startCandle: obIdx, endCandle: obIdx, label: 'OB Bullish' }],
@@ -821,6 +884,46 @@ const CHART_GENERATORS = [
   { fn: generateFVGChart, name: 'FVG', id: 'fvg' },
   { fn: generateOBChart, name: 'Order Block', id: 'ob' },
 ];
+
+// PATCH 2: Pattern compatibility map — which patterns can coexist as wrong answers
+const PATTERN_CONFUSION_MAP = {
+  'turtle_soup': ['CRT', 'MSS + OTE', 'Piege / Invalide'],
+  'double_purge': ['CRT', 'Piege / Invalide', 'MSS + OTE'],
+  'crt': ['Order Block', 'Double Purge', 'Piege / Invalide'],
+  'invalid_crt': ['CRT', 'Order Block', 'Double Purge'],
+  'mss_ote': ['Turtle Soup', 'CRT', 'Double Purge'],
+  'manipulation_trap': ['Turtle Soup', 'CRT', 'Order Block'],
+  'fvg': ['Order Block', 'CRT', 'MSS + OTE'],
+  'ob': ['CRT', 'MSS + OTE', 'Double Purge'],
+};
+
+// ============================================================
+// HTF CONTEXT GENERATOR (PATCH 3)
+// ============================================================
+
+function generateHTFContext(direction) {
+  const isBullish = direction === 'bullish';
+  const monthlyBias = isBullish ? 'Bullish' : 'Bearish';
+  const weeklyCandle = isBullish
+    ? (Math.random() > 0.3 ? 'Close Above prev high' : 'Wick Above prev high, Close inside')
+    : (Math.random() > 0.3 ? 'Close Below prev low' : 'Wick Below prev low, Close inside');
+  const basePrice = rnd(1.05, 1.25);
+  const dolOffset = rnd(0.005, 0.02);
+  const dol = isBullish
+    ? (basePrice + dolOffset).toFixed(4)
+    : (basePrice - dolOffset).toFixed(4);
+  const dolPosition = isBullish ? 'above' : 'below';
+  const correctDirection = isBullish ? 'Bullish' : 'Bearish';
+
+  return {
+    monthlyBias,
+    weeklyCandle,
+    dol,
+    dolPosition,
+    correctDirection,
+    currentPrice: basePrice.toFixed(4),
+  };
+}
 
 // ============================================================
 // STATE MANAGEMENT
@@ -869,13 +972,15 @@ function generateDailyMissions(state) {
     const bS=SKILL_BRANCHES[b].concepts.reduce((s,c)=>s+(state.skillLevels[c.id]||0),0);
     return aS-bS;
   });
+  // PATCH 4: Cap mission XP at 30 per mission
+  const missionXp = (base) => Math.min(30, base);
   return [
-    { id:'m1_'+today, text:`Reussis ${5+r*2} quiz ${SKILL_BRANCHES[weakBranches[0]].name}`, type:'quiz', xp:15+r*5, completed:false, target:5+r*2, progress:0, branch:weakBranches[0] },
-    { id:'m2_'+today, text:`Enchaine ${3+r} bonnes reponses`, type:'streak_quiz', xp:20+r*5, completed:false, target:3+r, progress:0 },
-    { id:'m3_'+today, text:`${60+r*5}% sur un set de quiz`, type:'score', xp:20+r*5, completed:false, target:60+r*5, progress:0 },
-    { id:'m4_'+today, text:'Complete un scenario', type:'scenario', xp:30+r*5, completed:false, target:1, progress:0 },
-    { id:'m5_'+today, text:`${15+r*5} quiz au total`, type:'total_quiz', xp:25+r*5, completed:false, target:15+r*5, progress:0 },
-    { id:'m6_'+today, text:'Complete 1 exercice Arena', type:'arena', xp:25+r*5, completed:false, target:1, progress:0 },
+    { id:'m1_'+today, text:`Reussis ${5+r*2} quiz ${SKILL_BRANCHES[weakBranches[0]].name}`, type:'quiz', xp:missionXp(15+r*3), completed:false, target:5+r*2, progress:0, branch:weakBranches[0] },
+    { id:'m2_'+today, text:`Enchaine ${3+r} bonnes reponses`, type:'streak_quiz', xp:missionXp(20+r*3), completed:false, target:3+r, progress:0 },
+    { id:'m3_'+today, text:`${60+r*5}% sur un set de quiz`, type:'score', xp:missionXp(20+r*3), completed:false, target:60+r*5, progress:0 },
+    { id:'m4_'+today, text:'Complete un scenario', type:'scenario', xp:missionXp(25+r*3), completed:false, target:1, progress:0 },
+    { id:'m5_'+today, text:`${15+r*5} quiz au total`, type:'total_quiz', xp:missionXp(25+r*3), completed:false, target:15+r*5, progress:0 },
+    { id:'m6_'+today, text:'Complete 1 exercice Arena', type:'arena', xp:missionXp(25+r*3), completed:false, target:1, progress:0 },
   ];
 }
 
@@ -929,15 +1034,45 @@ function XPBar({xp}) {
 }
 
 // ============================================================
-// CHART CANVAS COMPONENT
+// CHART CANVAS COMPONENT — PATCH 1: Full interaction support
 // ============================================================
 
-function ChartCanvas({ candles, markers, zones, highlightCandles, visibleCount, crosshairEnabled, onChartClick, width: propWidth, height: propHeight, className }) {
+function ChartCanvas({ candles, markers, zones, highlightCandles, visibleCount: propVisibleCount, crosshairEnabled, onChartClick, width: propWidth, height: propHeight, className, enableInteraction = true, animateNewCandle = false }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ w: propWidth || 350, h: propHeight || 280 });
   const [crosshair, setCrosshair] = useState(null);
   const chartInfoRef = useRef(null);
+
+  // PATCH 1: Zoom/pan/pinch state
+  const totalCandles = (candles || []).length;
+  const [zoomLevel, setZoomLevel] = useState(1.0);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [priceScaleOffset, setPriceScaleOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPriceAxisDrag, setIsPriceAxisDrag] = useState(false);
+  const dragStartRef = useRef(null);
+  const pinchStartRef = useRef(null);
+  const lastTapRef = useRef(0);
+
+  // Compute visible count from zoom
+  const computedVisibleCount = propVisibleCount || totalCandles;
+  const zoomedVisibleCount = Math.max(5, Math.min(totalCandles, Math.round(computedVisibleCount / zoomLevel)));
+
+  // Clamp scroll offset
+  const maxScroll = Math.max(0, totalCandles - zoomedVisibleCount);
+  const clampedScroll = Math.max(0, Math.min(maxScroll, scrollOffset));
+
+  // Reset zoom when candles change significantly (new scenario)
+  const prevCandleCountRef = useRef(totalCandles);
+  useEffect(() => {
+    if (Math.abs(totalCandles - prevCandleCountRef.current) > 5) {
+      setZoomLevel(1.0);
+      setScrollOffset(0);
+      setPriceScaleOffset(0);
+    }
+    prevCandleCountRef.current = totalCandles;
+  }, [totalCandles]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -963,10 +1098,151 @@ function ChartCanvas({ candles, markers, zones, highlightCandles, visibleCount, 
       markers: markers || [],
       zones: zones || [],
       highlightCandles: highlightCandles || [],
-      visibleCount: visibleCount || (candles || []).length,
+      visibleCount: zoomedVisibleCount,
+      scrollOffset: clampedScroll,
       crosshair,
+      zoomLabel: zoomLevel !== 1.0 ? `x${zoomLevel.toFixed(1)}` : null,
+      priceScaleOffset,
+      animateLastCandle: animateNewCandle,
     });
-  }, [candles, markers, zones, highlightCandles, visibleCount, crosshair, dimensions]);
+  }, [candles, markers, zones, highlightCandles, zoomedVisibleCount, clampedScroll, crosshair, dimensions, zoomLevel, priceScaleOffset]);
+
+  // Zoom with scroll wheel
+  const handleWheel = useCallback((e) => {
+    if (!enableInteraction) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    setZoomLevel(prev => {
+      const newZoom = Math.max(1.0, Math.min(10.0, prev + delta));
+      return Math.round(newZoom * 100) / 100;
+    });
+    // Adjust scroll to keep center
+    if (e.deltaY < 0) {
+      setScrollOffset(prev => Math.max(0, prev + 1));
+    }
+  }, [enableInteraction]);
+
+  // Double-click/tap to reset
+  const handleDoubleAction = useCallback(() => {
+    setZoomLevel(1.0);
+    setScrollOffset(0);
+    setPriceScaleOffset(0);
+  }, []);
+
+  // Mouse events for pan/drag
+  const handleMouseDown = useCallback((e) => {
+    if (!enableInteraction) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    // Check if clicking on price axis area (right side)
+    if (x > dimensions.w - 60) {
+      setIsPriceAxisDrag(true);
+      dragStartRef.current = { x: e.clientX, y: e.clientY, scrollOffset: clampedScroll, priceScaleOffset };
+      return;
+    }
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY, scrollOffset: clampedScroll, priceScaleOffset };
+  }, [enableInteraction, clampedScroll, priceScaleOffset, dimensions.w]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (isDragging && dragStartRef.current) {
+      const dx = e.clientX - dragStartRef.current.x;
+      const candlesPerPixel = zoomedVisibleCount / (dimensions.w - 70);
+      const scrollDelta = Math.round(-dx * candlesPerPixel * 0.5);
+      setScrollOffset(Math.max(0, Math.min(maxScroll, dragStartRef.current.scrollOffset + scrollDelta)));
+      setCrosshair(null);
+    } else if (isPriceAxisDrag && dragStartRef.current) {
+      const dy = e.clientY - dragStartRef.current.y;
+      setPriceScaleOffset(dragStartRef.current.priceScaleOffset + dy);
+    } else if (crosshairEnabled) {
+      const r = canvasRef.current.getBoundingClientRect();
+      setCrosshair({ x: e.clientX - r.left, y: e.clientY - r.top });
+    }
+  }, [isDragging, isPriceAxisDrag, crosshairEnabled, zoomedVisibleCount, dimensions.w, maxScroll]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    setIsPriceAxisDrag(false);
+    dragStartRef.current = null;
+  }, []);
+
+  const onMouseLeave = () => { setCrosshair(null); setIsDragging(false); setIsPriceAxisDrag(false); };
+
+  const onClick = (e) => {
+    if (isDragging) return;
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      handleDoubleAction();
+      lastTapRef.current = 0;
+      return;
+    }
+    lastTapRef.current = now;
+    handleInteraction(e.clientX, e.clientY);
+  };
+
+  // Touch events for pan + pinch
+  const handleTouchStart = useCallback((e) => {
+    if (!enableInteraction) return;
+    if (e.touches.length === 2) {
+      // Pinch start
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      pinchStartRef.current = { distance: d, zoomLevel };
+      e.preventDefault();
+    } else if (e.touches.length === 1) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      if (x > dimensions.w - 60) {
+        setIsPriceAxisDrag(true);
+        dragStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, scrollOffset: clampedScroll, priceScaleOffset };
+      } else {
+        setIsDragging(true);
+        dragStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, scrollOffset: clampedScroll, priceScaleOffset };
+      }
+    }
+  }, [enableInteraction, zoomLevel, clampedScroll, priceScaleOffset, dimensions.w]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (e.touches.length === 2 && pinchStartRef.current) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const scale = d / pinchStartRef.current.distance;
+      setZoomLevel(Math.max(1.0, Math.min(10.0, pinchStartRef.current.zoomLevel * scale)));
+      e.preventDefault();
+    } else if (e.touches.length === 1 && dragStartRef.current) {
+      if (isPriceAxisDrag) {
+        const dy = e.touches[0].clientY - dragStartRef.current.y;
+        setPriceScaleOffset(dragStartRef.current.priceScaleOffset + dy);
+      } else if (isDragging) {
+        const dx = e.touches[0].clientX - dragStartRef.current.x;
+        const candlesPerPixel = zoomedVisibleCount / (dimensions.w - 70);
+        const scrollDelta = Math.round(-dx * candlesPerPixel * 0.5);
+        setScrollOffset(Math.max(0, Math.min(maxScroll, dragStartRef.current.scrollOffset + scrollDelta)));
+      }
+      e.preventDefault();
+    }
+  }, [isDragging, isPriceAxisDrag, zoomedVisibleCount, dimensions.w, maxScroll]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (e.touches.length === 0) {
+      // Double-tap detection
+      if (e.changedTouches.length > 0 && !isDragging && !isPriceAxisDrag) {
+        const now = Date.now();
+        if (now - lastTapRef.current < 300) {
+          handleDoubleAction();
+          lastTapRef.current = 0;
+        } else {
+          lastTapRef.current = now;
+          const t = e.changedTouches[0];
+          handleInteraction(t.clientX, t.clientY);
+        }
+      }
+      setIsDragging(false);
+      setIsPriceAxisDrag(false);
+      pinchStartRef.current = null;
+      dragStartRef.current = null;
+    }
+    if (e.cancelable) e.preventDefault();
+  }, [isDragging, isPriceAxisDrag, handleDoubleAction]);
 
   const handleInteraction = useCallback((clientX, clientY) => {
     const canvas = canvasRef.current;
@@ -982,14 +1258,28 @@ function ChartCanvas({ candles, markers, zones, highlightCandles, visibleCount, 
     }
   }, [crosshairEnabled, onChartClick]);
 
-  const onMouseMove = (e) => { if (crosshairEnabled) { const r = canvasRef.current.getBoundingClientRect(); setCrosshair({ x: e.clientX - r.left, y: e.clientY - r.top }); } };
-  const onMouseLeave = () => setCrosshair(null);
-  const onClick = (e) => handleInteraction(e.clientX, e.clientY);
-  const onTouchEnd = (e) => { if (e.changedTouches.length > 0) { const t = e.changedTouches[0]; handleInteraction(t.clientX, t.clientY); e.preventDefault(); } };
+  // Attach wheel listener with passive: false
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !enableInteraction) return;
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', handleWheel);
+  }, [handleWheel, enableInteraction]);
 
   return (
     <div ref={containerRef} className={`w-full rounded-lg overflow-hidden ${className || ''}`} style={{ background: CHART_COLORS.bg }}>
-      <canvas ref={canvasRef} onMouseMove={onMouseMove} onMouseLeave={onMouseLeave} onClick={onClick} onTouchEnd={onTouchEnd} style={{ cursor: crosshairEnabled ? 'crosshair' : 'default' }} />
+      <canvas
+        ref={canvasRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={onMouseLeave}
+        onClick={onClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ cursor: isDragging ? 'grabbing' : isPriceAxisDrag ? 'ns-resize' : crosshairEnabled ? 'crosshair' : 'grab' }}
+      />
     </div>
   );
 }
@@ -1007,9 +1297,10 @@ function TradeReplay({ state, setState, onBack }) {
   const [score, setScore] = useState(0);
   const [totalQ, setTotalQ] = useState(0);
   const [userMarkers, setUserMarkers] = useState([]);
-  const [placingMode, setPlacingMode] = useState(null); // 'entry', 'sl', 'tp'
+  const [placingMode, setPlacingMode] = useState(null);
   const [flashClass, setFlashClass] = useState('');
   const [feedback, setFeedback] = useState(null);
+  const [animateCandle, setAnimateCandle] = useState(false);
 
   const startScenario = () => {
     const genIdx = Math.floor(Math.random() * CHART_GENERATORS.length);
@@ -1023,19 +1314,22 @@ function TradeReplay({ state, setState, onBack }) {
     setTotalQ(0);
     setUserMarkers([]);
     setFeedback(null);
+    setAnimateCandle(false);
   };
 
   const addCandle = () => {
     if (!scenario) return;
     const next = visibleCandles + 1;
+    // PATCH 5: Animate new candle
+    setAnimateCandle(true);
     setVisibleCandles(next);
+    setTimeout(() => setAnimateCandle(false), 300);
 
     if (next >= scenario.candles.length) {
       setPhase('summary');
       return;
     }
 
-    // Check if we should ask a question
     if (scenario.askAt && next === scenario.askAt) {
       askQuestion();
     }
@@ -1044,7 +1338,6 @@ function TradeReplay({ state, setState, onBack }) {
   const askQuestion = () => {
     const questions = [];
 
-    // Market profile question
     if (!answers.find(a => a.type === 'profile')) {
       const profiles = ['Range', 'Expansion', 'Manipulation', 'Reversal'];
       const correct = scenario.isTrap ? 'Manipulation' : scenario.direction === 'bullish' ? 'Reversal' : 'Reversal';
@@ -1057,7 +1350,6 @@ function TradeReplay({ state, setState, onBack }) {
       });
     }
 
-    // Pattern identification
     if (!answers.find(a => a.type === 'pattern')) {
       const patterns = ['Turtle Soup', 'Double Purge', 'CRT Valide', 'MSS + OTE', 'FVG', 'Order Block', 'Piege / Invalide'];
       const correct = scenario.isTrap ? 'Piege / Invalide' : scenario.patternName.includes('Invalide') ? 'Piege / Invalide' : patterns.find(p => scenario.patternName.includes(p)) || scenario.patternName;
@@ -1072,7 +1364,6 @@ function TradeReplay({ state, setState, onBack }) {
       });
     }
 
-    // Trade decision
     if (!answers.find(a => a.type === 'decision')) {
       const correct = scenario.isTrap || !scenario.valid === false || scenario.pattern === 'invalid_crt' ? 'PASS — conditions non reunies' : 'ENTRY — setup valide';
       const opts = ['ENTRY — setup valide', 'PASS — conditions non reunies', 'Attendre plus de bougies', 'Shorter le mouvement'];
@@ -1105,13 +1396,15 @@ function TradeReplay({ state, setState, onBack }) {
     setFlashClass(isCorrect ? 'flash-correct' : 'flash-wrong');
     setTimeout(() => setFlashClass(''), 500);
 
+    // PATCH 4: Reduced XP — 3 XP per correct arena answer
+    const xpGain = isCorrect ? 3 : 0;
     setFeedback({
-      text: isCorrect ? 'Correct ! +15 XP' : `Incorrect. Reponse : ${question.options[question.correct]}`,
+      text: isCorrect ? `Correct ! +${xpGain} XP` : `Incorrect. Reponse : ${question.options[question.correct]}`,
       color: isCorrect ? '#10B981' : '#EF4444',
     });
 
     if (isCorrect) {
-      const ns = { ...state, xp: state.xp + 15 };
+      const ns = { ...state, xp: state.xp + xpGain };
       ns.rank = getRank(ns.xp);
       setState(ns); saveState(ns);
     }
@@ -1119,7 +1412,6 @@ function TradeReplay({ state, setState, onBack }) {
     setTimeout(() => {
       setQuestion(null);
       setFeedback(null);
-      // Ask next question or continue
       if (answers.length + 1 < 3) {
         askQuestion();
       } else if (scenario.entryZone && !scenario.isTrap) {
@@ -1147,7 +1439,6 @@ function TradeReplay({ state, setState, onBack }) {
       setUserMarkers(newMarkers);
       setPlacingMode(null);
 
-      // Evaluate placement
       const entry = newMarkers.find(m => m.type === 'entry');
       const sl = newMarkers.find(m => m.type === 'sl');
       const tp = newMarkers.find(m => m.type === 'tp');
@@ -1160,7 +1451,7 @@ function TradeReplay({ state, setState, onBack }) {
         const goodRR = rr >= 1.8;
         const goodSL = scenario.direction === 'bullish' ? sl.price < ideal.sl + Math.abs(ideal.sl - ideal.price) * 0.5 : sl.price > ideal.sl - Math.abs(ideal.sl - ideal.price) * 0.5;
         const placementScore = (goodRR ? 1 : 0) + (goodSL ? 1 : 0);
-        const xpGain = placementScore * 10;
+        const xpGain = placementScore * 3;
 
         setFeedback({
           text: `RR = ${rr.toFixed(1)}:1 ${goodRR ? '(OK)' : '(< 2:1 !)'}. SL ${goodSL ? 'bien place' : 'a ameliorer'}. +${xpGain} XP`,
@@ -1185,12 +1476,12 @@ function TradeReplay({ state, setState, onBack }) {
   };
 
   const finishReplay = () => {
-    const totalXP = 25;
+    // PATCH 4: Arena exercise completion XP: 15-25 range
+    const totalXP = 20;
     const ns = { ...state };
     ns.xp += totalXP;
     ns.arenaStats = { ...ns.arenaStats, replaysCompleted: (ns.arenaStats.replaysCompleted || 0) + 1, totalArenaXp: (ns.arenaStats.totalArenaXp || 0) + totalXP };
     ns.rank = getRank(ns.xp);
-    // Arena mission
     if (ns.missionsDate === todayStr()) {
       ns.dailyMissions = ns.dailyMissions.map(m => m.type === 'arena' && !m.completed ? { ...m, progress: 1, completed: true } : m);
       ns.dailyMissions.forEach(m => { if (m.completed && !m.xpAwarded) { ns.xp += m.xp; m.xpAwarded = true; } });
@@ -1260,6 +1551,7 @@ function TradeReplay({ state, setState, onBack }) {
         highlightCandles={[]}
         crosshairEnabled={phase === 'placing'}
         onChartClick={handleChartClick}
+        animateNewCandle={animateCandle}
       />
 
       {feedback && (
@@ -1302,28 +1594,49 @@ function TradeReplay({ state, setState, onBack }) {
 }
 
 // ============================================================
-// ARENA — PATTERN SPOTTER MODE
+// ARENA — PATTERN SPOTTER MODE (PATCH 3: HTF Context)
 // ============================================================
 
 function PatternSpotter({ state, setState, onBack }) {
   const [scenario, setScenario] = useState(null);
-  const [phase, setPhase] = useState('intro'); // intro, identify, select_candles, place_entry, result
+  const [phase, setPhase] = useState('intro'); // intro, htf_question, identify, select_candles, place_entry, result
   const [selectedPattern, setSelectedPattern] = useState(null);
   const [selectedCandles, setSelectedCandles] = useState([]);
   const [entryPrice, setEntryPrice] = useState(null);
   const [score, setScore] = useState(0);
+  const [htfScore, setHtfScore] = useState(0);
   const [flashClass, setFlashClass] = useState('');
+  const [htfContext, setHtfContext] = useState(null);
+  const [htfAnswered, setHtfAnswered] = useState(false);
 
   const startScenario = () => {
     const validGens = CHART_GENERATORS.filter(g => g.id !== 'manipulation_trap' && g.id !== 'invalid_crt');
     const gen = validGens[Math.floor(Math.random() * validGens.length)];
     const data = gen.fn();
+    const htf = generateHTFContext(data.direction);
     setScenario(data);
-    setPhase('identify');
+    setHtfContext(htf);
+    setPhase('htf_question');
     setSelectedPattern(null);
     setSelectedCandles([]);
     setEntryPrice(null);
     setScore(0);
+    setHtfScore(0);
+    setHtfAnswered(false);
+  };
+
+  const handleHTFAnswer = (answer) => {
+    setHtfAnswered(true);
+    const correct = answer === htfContext.correctDirection;
+    if (correct) setHtfScore(1);
+    setFlashClass(correct ? 'flash-correct' : 'flash-wrong');
+    // PATCH 4: Reduced XP
+    if (correct) {
+      const ns = { ...state, xp: state.xp + 3 };
+      ns.rank = getRank(ns.xp);
+      setState(ns); saveState(ns);
+    }
+    setTimeout(() => { setFlashClass(''); setPhase('identify'); }, 800);
   };
 
   const patternChoices = ['Turtle Soup', 'Double Purge', 'CRT Bullish', 'CRT Bearish', 'MSS + OTE', 'FVG', 'Order Block', 'Breaker Block'];
@@ -1351,7 +1664,6 @@ function PatternSpotter({ state, setState, onBack }) {
   };
 
   const confirmCandles = () => {
-    // Check how many key candles the user got right
     const hits = selectedCandles.filter(c => scenario.keyCandles.includes(c)).length;
     const accuracy = scenario.keyCandles.length > 0 ? hits / scenario.keyCandles.length : 0;
     if (accuracy >= 0.5) setScore(s => s + 1);
@@ -1362,7 +1674,6 @@ function PatternSpotter({ state, setState, onBack }) {
   const handleEntryClick = ({ price }) => {
     if (phase !== 'place_entry') return;
     setEntryPrice(price);
-    // Evaluate entry placement
     if (scenario.entryZone) {
       const dist = Math.abs(price - scenario.entryZone.price);
       const range = Math.abs(scenario.entryZone.tp - scenario.entryZone.sl);
@@ -1374,10 +1685,12 @@ function PatternSpotter({ state, setState, onBack }) {
   };
 
   const finishSpotter = () => {
-    const xpGain = score * 15 + 10;
+    // PATCH 4: Arena exercise XP 15-25
+    const xpGain = score * 5 + htfScore * 5 + 10;
+    const cappedXp = Math.min(25, xpGain);
     const ns = { ...state };
-    ns.xp += xpGain;
-    ns.arenaStats = { ...ns.arenaStats, patternsSpotted: (ns.arenaStats.patternsSpotted || 0) + 1, totalArenaXp: (ns.arenaStats.totalArenaXp || 0) + xpGain };
+    ns.xp += cappedXp;
+    ns.arenaStats = { ...ns.arenaStats, patternsSpotted: (ns.arenaStats.patternsSpotted || 0) + 1, totalArenaXp: (ns.arenaStats.totalArenaXp || 0) + cappedXp };
     ns.rank = getRank(ns.xp);
     if (ns.missionsDate === todayStr()) {
       ns.dailyMissions = ns.dailyMissions.map(m => m.type === 'arena' && !m.completed ? { ...m, progress: 1, completed: true } : m);
@@ -1396,8 +1709,64 @@ function PatternSpotter({ state, setState, onBack }) {
         <div className="text-center py-8">
           <span className="text-5xl block mb-4">&#128269;</span>
           <h3 className="text-2xl font-bold text-white mb-2">Pattern Spotter Mode</h3>
-          <p className="text-gray-400 mb-6 max-w-sm mx-auto">Identifie le pattern, selectionne les bougies cles, place l'entree optimale.</p>
+          <p className="text-gray-400 mb-6 max-w-sm mx-auto">Analyse le HTF, identifie le pattern, selectionne les bougies cles, place l'entree optimale.</p>
           <button onClick={startScenario} className="arena-btn primary px-8 py-4 rounded-xl text-amber-400 font-bold text-lg">Commencer</button>
+        </div>
+      </div>
+    );
+  }
+
+  // PATCH 3: HTF Context panel (shown on all phases except intro)
+  const HTFPanel = () => htfContext ? (
+    <div className="dojo-card p-3 mb-3 border-purple-500/20">
+      <p className="text-xs text-purple-400 font-semibold mb-2">HTF CONTEXT</p>
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div>
+          <span className="text-gray-500">Monthly:</span>
+          <span className={`ml-1 font-medium ${htfContext.monthlyBias === 'Bullish' ? 'text-emerald-400' : 'text-red-400'}`}>{htfContext.monthlyBias}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Weekly:</span>
+          <span className="ml-1 text-gray-300 text-[10px]">{htfContext.weeklyCandle}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Key DOL:</span>
+          <span className="ml-1 text-amber-400 font-mono">{htfContext.dol}</span>
+          <span className="text-gray-600 text-[10px] ml-1">({htfContext.dolPosition})</span>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  // PATCH 3: HTF Question phase
+  if (phase === 'htf_question') {
+    return (
+      <div className={`animate-fade-in ${flashClass}`}>
+        <div className="flex items-center gap-3 mb-3">
+          <button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button>
+          <h2 className="text-lg font-bold text-white">Pattern Spotter</h2>
+          <div className="flex-1" />
+          <div className="flex gap-1">
+            {['htf_question', 'identify', 'select_candles', 'place_entry'].map((p, i) => (
+              <div key={p} className="w-6 h-1.5 rounded-full" style={{ background: i === 0 ? '#8B5CF6' : '#1E1E2E' }} />
+            ))}
+          </div>
+        </div>
+
+        <HTFPanel />
+
+        <div className="mt-4 animate-slide-up">
+          <div className="dojo-card p-4 mb-4 border-purple-500/20">
+            <p className="text-white font-medium mb-1">Analyse HTF</p>
+            <p className="text-sm text-gray-400">D'apres le contexte HTF ci-dessus, quelle direction privilegier ?</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {['Bullish', 'Bearish', 'Neutral', 'Pass'].map(dir => (
+              <div key={dir} className="quiz-option dojo-card p-3 text-sm text-gray-200 text-center" onClick={() => handleHTFAnswer(dir)}>
+                {dir === 'Bullish' ? '\u2191 ' : dir === 'Bearish' ? '\u2193 ' : dir === 'Neutral' ? '\u2194 ' : '\u23F8 '}{dir}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -1405,9 +1774,12 @@ function PatternSpotter({ state, setState, onBack }) {
 
   if (phase === 'result') {
     finishSpotter();
-    const pct = Math.round(score / 3 * 100);
+    const totalPoints = 4; // htf + pattern + candles + entry
+    const totalScore = score + htfScore;
+    const pct = Math.round(totalScore / totalPoints * 100);
     return (
       <div className={`animate-slide-up ${flashClass}`}>
+        <HTFPanel />
         <ChartCanvas
           candles={scenario.candles}
           markers={scenario.entryZone ? [
@@ -1420,7 +1792,8 @@ function PatternSpotter({ state, setState, onBack }) {
         />
         <div className="mt-4 text-center">
           <p className="text-3xl font-bold mb-2" style={{ color: pct >= 70 ? '#10B981' : pct >= 40 ? '#F59E0B' : '#EF4444' }}>{pct}%</p>
-          <p className="text-gray-400 mb-2">{score}/3 correct — {scenario.patternName}</p>
+          <p className="text-gray-400 mb-1">{totalScore}/{totalPoints} correct — {scenario.patternName}</p>
+          <p className="text-xs text-purple-400 mb-2">HTF: {htfScore ? 'Correct' : 'Incorrect'}</p>
           <div className="dojo-card p-4 text-left mb-4">
             <p className="text-xs text-amber-400 font-semibold mb-2">CORRECTION</p>
             <p className="text-sm text-gray-300 mb-2">{scenario.explanation}</p>
@@ -1442,11 +1815,13 @@ function PatternSpotter({ state, setState, onBack }) {
         <h2 className="text-lg font-bold text-white">Pattern Spotter</h2>
         <div className="flex-1" />
         <div className="flex gap-1">
-          {['identify', 'select_candles', 'place_entry'].map((p, i) => (
-            <div key={p} className="w-8 h-1.5 rounded-full" style={{ background: ['identify', 'select_candles', 'place_entry'].indexOf(phase) >= i ? '#D4A853' : '#1E1E2E' }} />
+          {['htf_question', 'identify', 'select_candles', 'place_entry'].map((p, i) => (
+            <div key={p} className="w-6 h-1.5 rounded-full" style={{ background: ['htf_question', 'identify', 'select_candles', 'place_entry'].indexOf(phase) >= i ? '#D4A853' : '#1E1E2E' }} />
           ))}
         </div>
       </div>
+
+      <HTFPanel />
 
       <ChartCanvas
         candles={scenario.candles}
@@ -1486,7 +1861,7 @@ function PatternSpotter({ state, setState, onBack }) {
 }
 
 // ============================================================
-// ARENA — QUICK DRILL MODE
+// ARENA — QUICK DRILL MODE (PATCH 2: Better answer generation)
 // ============================================================
 
 function QuickDrill({ state, setState, onBack }) {
@@ -1499,11 +1874,14 @@ function QuickDrill({ state, setState, onBack }) {
   const [isFinished, setIsFinished] = useState(false);
   const [timer, setTimer] = useState(15);
   const timerRef = useRef(null);
+  // PATCH 5: Show explanation on wrong answer
+  const [showExplanation, setShowExplanation] = useState(null);
 
   const nextRound = useCallback(() => {
     if (round >= totalRounds) {
       setIsFinished(true);
-      const xpGain = score * 10 + 10;
+      // PATCH 4: Reduced XP for drill completion
+      const xpGain = Math.min(25, score * 3 + 5);
       const ns = { ...state };
       ns.xp += xpGain;
       ns.arenaStats = { ...ns.arenaStats, drillsCompleted: (ns.arenaStats.drillsCompleted || 0) + 1, totalArenaXp: (ns.arenaStats.totalArenaXp || 0) + xpGain };
@@ -1519,14 +1897,23 @@ function QuickDrill({ state, setState, onBack }) {
     const gen = CHART_GENERATORS[Math.floor(Math.random() * CHART_GENERATORS.length)];
     const data = gen.fn();
 
-    // Create a quick question
+    // PATCH 2: Use confusion map for better wrong answers
     const patterns = ['Turtle Soup', 'Double Purge', 'CRT', 'MSS + OTE', 'FVG', 'Order Block', 'Piege / Invalide'];
     const correctName = data.isTrap ? 'Piege / Invalide' : !data.valid && data.valid !== undefined ? 'Piege / Invalide' : patterns.find(p => data.patternName.toLowerCase().includes(p.toLowerCase().split(' ')[0].toLowerCase())) || data.patternName;
-    const others = patterns.filter(p => p !== correctName).sort(() => Math.random() - 0.5).slice(0, 3);
+
+    // Use confusion map to pick plausible but distinguishable wrong answers
+    const confusionList = PATTERN_CONFUSION_MAP[data.dominantPattern || data.pattern] || [];
+    let others;
+    if (confusionList.length >= 3) {
+      others = confusionList.slice(0, 3);
+    } else {
+      others = patterns.filter(p => p !== correctName).sort(() => Math.random() - 0.5).slice(0, 3);
+    }
     const opts = [correctName, ...others].sort(() => Math.random() - 0.5);
 
     setScenario({ ...data, options: opts, correctIdx: opts.indexOf(correctName) });
     setAnswered(false);
+    setShowExplanation(null);
     setTimer(15);
 
     if (timerRef.current) clearInterval(timerRef.current);
@@ -1556,7 +1943,14 @@ function QuickDrill({ state, setState, onBack }) {
     const correct = idx === scenario.correctIdx;
     if (correct) setScore(s => s + 1);
     setFlashClass(correct ? 'flash-correct' : 'flash-wrong');
-    setTimeout(() => { setFlashClass(''); setRound(r => r + 1); }, 1200);
+
+    // PATCH 5: Show explanation briefly on wrong answer
+    if (!correct) {
+      setShowExplanation(scenario.explanation || `Reponse : ${scenario.options[scenario.correctIdx]}`);
+      setTimeout(() => { setShowExplanation(null); setFlashClass(''); setRound(r => r + 1); }, 2500);
+    } else {
+      setTimeout(() => { setFlashClass(''); setRound(r => r + 1); }, 1000);
+    }
   };
 
   if (isFinished) {
@@ -1600,6 +1994,13 @@ function QuickDrill({ state, setState, onBack }) {
           <div key={i} className={`quiz-option dojo-card p-3 text-sm text-center ${answered ? (i === scenario.correctIdx ? 'correct' : 'wrong') : 'text-gray-200'}`} onClick={() => handleAnswer(i)}>{opt}</div>
         ))}
       </div>
+
+      {/* PATCH 5: Brief explanation on wrong answer */}
+      {showExplanation && (
+        <div className="animate-slide-up dojo-card p-3 mt-3 border-red-500/30 text-center">
+          <p className="text-xs text-red-400 font-medium">{showExplanation}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -1660,10 +2061,11 @@ function ArenaPage({ state, setState }) {
             <span className="text-3xl">&#128269;</span>
             <div>
               <p className="font-semibold text-white text-lg">Pattern Spotter</p>
-              <p className="text-sm text-gray-400">Chart complet. Identifie le pattern, selectionne les bougies cles, place l'entree optimale. 3 epreuves par chart.</p>
+              <p className="text-sm text-gray-400">Analyse HTF + chart complet. Identifie le pattern, selectionne les bougies cles, place l'entree optimale. 4 epreuves par chart.</p>
             </div>
           </div>
           <div className="flex gap-2 mt-3">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400">HTF Context</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Pattern ID</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400">Precision</span>
           </div>
@@ -1747,7 +2149,8 @@ function QuizEngine({ state, setState, onBack, branch = null }) {
   const [questions,setQuestions]=useState([]); const [currentQ,setCurrentQ]=useState(0); const [selected,setSelected]=useState(null); const [showResult,setShowResult]=useState(false); const [sessionCorrect,setSessionCorrect]=useState(0); const [sessionTotal,setSessionTotal]=useState(0); const [consecutiveCorrect,setConsecutiveCorrect]=useState(0); const [isFinished,setIsFinished]=useState(false); const [started,setStarted]=useState(false);
   const startQuiz=(size)=>{setQuestions(generateQuizSet(state,branch,size));setStarted(true);};
   if(!started){return(<div className="animate-fade-in"><div className="flex items-center gap-3 mb-6"><button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button><h2 className="text-xl font-bold text-white">Taille du quiz</h2></div>{branch&&<div className="mb-4 text-sm text-gray-400">Branche : <span style={{color:SKILL_BRANCHES[branch]?.color}}>{SKILL_BRANCHES[branch]?.name}</span></div>}<div className="grid gap-3" style={{gridTemplateColumns:'repeat(2, 1fr)'}}>{[{size:10,label:'10',desc:'Rapide',color:'#10B981'},{size:15,label:'15',desc:'Standard',color:'#F59E0B'},{size:25,label:'25',desc:'Approfondi',color:'#8B5CF6'},{size:50,label:'50',desc:'Marathon',color:'#EF4444'}].map(o=>(<button key={o.size} onClick={()=>startQuiz(o.size)} className="dojo-card p-5 text-left" style={{borderColor:o.color+'30'}}><p className="text-2xl font-bold" style={{color:o.color}}>{o.size}</p><p className="text-sm text-white">{o.label} questions</p><p className="text-xs text-gray-500">{o.desc}</p></button>))}</div></div>);}
-  const handleAnswer=(idx)=>{if(showResult)return;setSelected(idx);setShowResult(true);const q=questions[currentQ];const isC=idx===q.correct;const nC=sessionCorrect+(isC?1:0);const nCons=isC?consecutiveCorrect+1:0;setSessionTotal(sessionTotal+1);setSessionCorrect(nC);setConsecutiveCorrect(nCons);const ns={...state};ns.totalQuizAnswered=(state.totalQuizAnswered||0)+1;ns.totalCorrect=(state.totalCorrect||0)+(isC?1:0);if(!ns.conceptScores[q.concept])ns.conceptScores[q.concept]={correct:0,total:0};ns.conceptScores[q.concept].total++;if(isC)ns.conceptScores[q.concept].correct++;if(isC)ns.xp=(state.xp||0)+5+(nCons>=3?5:0);const cs=ns.conceptScores[q.concept];if(cs.total>=3){const ratio=cs.correct/cs.total;ns.skillLevels[q.concept]=Math.max(ns.skillLevels[q.concept]||0,ratio>=0.95?5:ratio>=0.85?4:ratio>=0.7?3:ratio>=0.5?2:ratio>=0.3?1:0);}if(ns.missionsDate===todayStr()){ns.dailyMissions=ns.dailyMissions.map(m=>{if(m.completed)return m;if(m.type==='quiz'&&m.branch===q.branch){const p=(m.progress||0)+(isC?1:0);return{...m,progress:p,completed:p>=m.target};}if(m.type==='total_quiz'){const p=(m.progress||0)+1;return{...m,progress:p,completed:p>=m.target};}if(m.type==='streak_quiz')return{...m,progress:Math.max(m.progress||0,nCons),completed:nCons>=m.target};return m;});ns.dailyMissions.forEach(m=>{if(m.completed&&!m.xpAwarded){ns.xp+=m.xp;m.xpAwarded=true;}});}ns.rank=getRank(ns.xp);setState(ns);saveState(ns);};
+  // PATCH 4: Reduced XP — 3 XP per correct, 0 per wrong, +2 streak bonus
+  const handleAnswer=(idx)=>{if(showResult)return;setSelected(idx);setShowResult(true);const q=questions[currentQ];const isC=idx===q.correct;const nC=sessionCorrect+(isC?1:0);const nCons=isC?consecutiveCorrect+1:0;setSessionTotal(sessionTotal+1);setSessionCorrect(nC);setConsecutiveCorrect(nCons);const ns={...state};ns.totalQuizAnswered=(state.totalQuizAnswered||0)+1;ns.totalCorrect=(state.totalCorrect||0)+(isC?1:0);if(!ns.conceptScores[q.concept])ns.conceptScores[q.concept]={correct:0,total:0};ns.conceptScores[q.concept].total++;if(isC)ns.conceptScores[q.concept].correct++;if(isC)ns.xp=(state.xp||0)+3+(nCons>=3?2:0);const cs=ns.conceptScores[q.concept];if(cs.total>=3){const ratio=cs.correct/cs.total;ns.skillLevels[q.concept]=Math.max(ns.skillLevels[q.concept]||0,ratio>=0.95?5:ratio>=0.85?4:ratio>=0.7?3:ratio>=0.5?2:ratio>=0.3?1:0);}if(ns.missionsDate===todayStr()){ns.dailyMissions=ns.dailyMissions.map(m=>{if(m.completed)return m;if(m.type==='quiz'&&m.branch===q.branch){const p=(m.progress||0)+(isC?1:0);return{...m,progress:p,completed:p>=m.target};}if(m.type==='total_quiz'){const p=(m.progress||0)+1;return{...m,progress:p,completed:p>=m.target};}if(m.type==='streak_quiz')return{...m,progress:Math.max(m.progress||0,nCons),completed:nCons>=m.target};return m;});ns.dailyMissions.forEach(m=>{if(m.completed&&!m.xpAwarded){ns.xp+=m.xp;m.xpAwarded=true;}});}ns.rank=getRank(ns.xp);setState(ns);saveState(ns);};
   const nextQuestion=()=>{if(currentQ+1>=questions.length){setIsFinished(true);const pct=Math.round(sessionCorrect/sessionTotal*100);const ns={...state};if(ns.missionsDate===todayStr()){ns.dailyMissions=ns.dailyMissions.map(m=>(m.type==='score'&&pct>=m.target&&!m.completed?{...m,progress:pct,completed:true}:m));ns.dailyMissions.forEach(m=>{if(m.completed&&!m.xpAwarded){ns.xp+=m.xp;m.xpAwarded=true;}});ns.rank=getRank(ns.xp);setState(ns);saveState(ns);}return;}setCurrentQ(currentQ+1);setSelected(null);setShowResult(false);};
   if(questions.length===0)return<div className="text-center py-20 text-gray-400">Chargement...</div>;
   if(isFinished){const pct=sessionTotal>0?Math.round(sessionCorrect/sessionTotal*100):0;const gc=pct>=90?'#10B981':pct>=80?'#3B82F6':pct>=70?'#F59E0B':'#EF4444';return(<div className="animate-slide-up text-center py-10"><div className="relative inline-block mb-6"><ProgressRing radius={60} stroke={6} progress={pct} color={gc}/><div className="absolute inset-0 flex items-center justify-center"><span className="text-3xl font-bold" style={{color:gc}}>{pct}%</span></div></div><p className="text-gray-400 mb-8">{sessionCorrect}/{sessionTotal}</p><div className="flex gap-3 justify-center"><button onClick={()=>{setStarted(false);setCurrentQ(0);setSelected(null);setShowResult(false);setSessionCorrect(0);setSessionTotal(0);setConsecutiveCorrect(0);setIsFinished(false);}} className="px-6 py-3 bg-amber-500/20 text-amber-400 rounded-lg font-medium">Recommencer</button><button onClick={onBack} className="px-6 py-3 bg-dojo-border text-gray-300 rounded-lg font-medium">Retour</button></div></div>);}
@@ -1760,9 +2163,10 @@ function ScenarioEngine({state,setState,onBack}) {
   const [cs,setCs]=useState(null);const [step,setStep]=useState(0);const [sel,setSel]=useState(null);const [showFb,setShowFb]=useState(false);const [score,setScore]=useState(0);const [answers,setAnswers]=useState([]);const [done,setDone]=useState(false);
   const r=getRank(state.xp);const available=SCENARIOS_DB.filter(s=>{const ri=RANKS.findIndex(rk=>rk.id===s.rank);return ri<=r+1;});
   if(!cs){return(<div className="animate-fade-in"><div className="flex items-center gap-3 mb-6"><button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button><h2 className="text-xl font-bold text-white">Scenarios</h2></div><div className="space-y-3">{available.map(s=>{const d=state.completedScenarios[s.id];const ri=RANKS.findIndex(rk=>rk.id===s.rank);return(<div key={s.id} className="dojo-card p-5 cursor-pointer hover:border-cyan-500/30" onClick={()=>setCs(s)}><div className="flex items-center justify-between"><div><div className="flex items-center gap-2 mb-1"><span className="text-white font-semibold">{s.title}</span>{d&&<span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">\u2713</span>}</div><p className="text-sm text-gray-400">{s.steps.length} etapes</p></div><span className="text-xs px-2 py-1 rounded" style={{background:RANKS[ri].color+'20',color:RANKS[ri].color}}>{s.rank}</span></div></div>);})}</div></div>);}
+  // PATCH 4: Scenario XP reduced
   if(done){const pct=Math.round(score/cs.steps.length*100);return(<div className="animate-slide-up text-center py-10"><h2 className="text-2xl font-bold text-white mb-2">{cs.title}</h2><p className="text-4xl font-bold mb-2" style={{color:pct>=75?'#10B981':pct>=50?'#F59E0B':'#EF4444'}}>{pct}%</p><p className="text-gray-400 mb-6">{score}/{cs.steps.length}</p><button onClick={()=>{setCs(null);setStep(0);setSel(null);setShowFb(false);setScore(0);setAnswers([]);setDone(false);}} className="px-6 py-3 bg-dojo-border text-gray-300 rounded-lg font-medium">Retour</button></div>);}
   const st=cs.steps[step];
-  const handleStepAnswer=(idx)=>{if(showFb)return;setSel(idx);setShowFb(true);const ok=idx===st.correct;if(ok)setScore(score+1);setAnswers([...answers,{step,selected:idx,correct:st.correct,isCorrect:ok}]);if(ok){const ns={...state,xp:state.xp+10};ns.rank=getRank(ns.xp);setState(ns);saveState(ns);}};
+  const handleStepAnswer=(idx)=>{if(showFb)return;setSel(idx);setShowFb(true);const ok=idx===st.correct;if(ok)setScore(score+1);setAnswers([...answers,{step,selected:idx,correct:st.correct,isCorrect:ok}]);if(ok){const ns={...state,xp:state.xp+3};ns.rank=getRank(ns.xp);setState(ns);saveState(ns);}};
   const nextStep=()=>{if(step+1>=cs.steps.length){const ns={...state};ns.completedScenarios[cs.id]={score,date:todayStr()};ns.xp+=cs.xpReward;ns.rank=getRank(ns.xp);if(ns.missionsDate===todayStr()){ns.dailyMissions=ns.dailyMissions.map(m=>m.type==='scenario'&&!m.completed?{...m,progress:1,completed:true}:m);ns.dailyMissions.forEach(m=>{if(m.completed&&!m.xpAwarded){ns.xp+=m.xp;m.xpAwarded=true;}});}setState(ns);saveState(ns);setDone(true);return;}setStep(step+1);setSel(null);setShowFb(false);};
   return(<div className="animate-fade-in"><div className="flex items-center gap-3 mb-4"><button onClick={()=>{setCs(null);setStep(0);setSel(null);setShowFb(false);setScore(0);setAnswers([]);}} className="text-gray-400 hover:text-white">\u2190</button><div className="flex-1 h-1.5 bg-dojo-border rounded-full overflow-hidden"><div className="h-full bg-cyan-500 rounded-full transition-all" style={{width:((step+1)/cs.steps.length*100)+'%'}}/></div><span className="text-xs text-gray-500 font-mono">{step+1}/{cs.steps.length}</span></div>{step===0&&!showFb&&<div className="dojo-card p-4 mb-4 border-cyan-500/20"><p className="text-xs text-cyan-400 font-medium mb-1">CONTEXTE</p><p className="text-sm text-gray-300">{cs.context}</p></div>}<div className="dojo-card p-5 mb-4"><p className="text-white font-medium">{st.q}</p></div><div className="space-y-2 mb-4">{st.options.map((opt,i)=>{let cl='quiz-option dojo-card p-4';if(showFb){if(i===st.correct)cl+=' correct';else if(i===sel)cl+=' wrong';}return<div key={i} className={cl} onClick={()=>handleStepAnswer(i)}><span className="text-sm text-gray-200">{opt}</span></div>;})}</div>{showFb&&(<><div className={`animate-slide-up dojo-card p-4 mb-4 ${sel===st.correct?'border-emerald-500/30':'border-red-500/30'}`}><p className={`text-sm ${sel===st.correct?'text-emerald-400':'text-red-400'}`}>{st.feedback}</p></div><button onClick={nextStep} className="w-full py-3 bg-cyan-500/20 text-cyan-400 rounded-lg font-medium">{step+1>=cs.steps.length?'Resultats':'Suivante \u2192'}</button></>)}</div>);
 }
@@ -1797,11 +2201,44 @@ function Challenge30({state,setState}) {
   return(<div className="animate-fade-in space-y-6"><div className="flex items-center justify-between"><h2 className="text-xl font-bold text-white">30-Day Challenge</h2><span className="text-amber-400 font-bold">Jour {challengeDay}/30</span></div><div className="dojo-card p-4"><div className="h-3 bg-dojo-border rounded-full overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-purple-500 via-cyan-500 to-red-500 transition-all" style={{width:(challengeDay/30*100)+'%'}}/></div></div>{[1,2,3,4].map(week=>(<div key={week}><h3 className="text-sm font-medium mb-3" style={{color:weekColors[week-1]}}>S{week} — {weekNames[week-1]}</h3><div className="space-y-2">{CHALLENGE_30.filter(d=>d.week===week).map(day=>{const key='day_'+day.day,data=state.challengeCompleted[key]||{objectives:[]};const isCurrent=day.day===challengeDay,isPast=day.day<challengeDay,isFuture=day.day>challengeDay,isComplete=data.completed;return(<div key={day.day} className={`dojo-card p-4 ${isCurrent?'border-amber-500/40':''} ${isFuture?'opacity-50':''}`}><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${isComplete?'bg-emerald-500/20 text-emerald-400':isCurrent?'bg-amber-500/20 text-amber-400':'bg-dojo-border text-gray-500'}`}>{isComplete?'\u2713':day.day}</div><span className={`font-medium text-sm ${isCurrent?'text-white':'text-gray-400'}`}>{day.title}</span></div><span className="text-xs font-mono text-amber-400/50">+{day.xp}</span></div>{(isCurrent||isPast)&&<div className="space-y-1.5 ml-9">{day.objectives.map((obj,i)=>{const dn=data.objectives[i];return(<div key={i} className="flex items-center gap-2 cursor-pointer" onClick={()=>!isFuture&&toggleObjective(day.day,i)}><div className={`w-4 h-4 rounded border flex items-center justify-center text-xs ${dn?'bg-emerald-500/20 border-emerald-500 text-emerald-400':'border-gray-600'}`}>{dn?'\u2713':''}</div><span className={`text-xs ${dn?'text-gray-500 line-through':'text-gray-300'}`}>{obj}</span></div>);})}</div>}</div>);})}</div></div>))}</div>);
 }
 
-// --- ANALYTICS ---
+// --- ANALYTICS (PATCH 4: Reset Progress button) ---
 function Analytics({state,setState}) {
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const branches=Object.entries(SKILL_BRANCHES);const branchScores=branches.map(([key,branch])=>{const scores=branch.concepts.map(c=>{const s=state.conceptScores[c.id];return(!s||s.total===0)?0:s.correct/s.total*100;});return{key,name:branch.name,icon:branch.icon,color:branch.color,avg:Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)};});
   const handleCSVImport=(e)=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=(ev)=>{try{const lines=ev.target.result.split('\n');const headers=lines[0].split(',').map(h=>h.trim().toLowerCase());const trades=lines.slice(1).filter(l=>l.trim()).map(line=>{const vals=line.split(',');const obj={};headers.forEach((h,i)=>obj[h]=vals[i]?.trim());return obj;});const ns={...state,trades:[...state.trades,...trades]};setState(ns);saveState(ns);}catch(err){}};reader.readAsText(file);};
-  return(<div className="animate-fade-in space-y-6"><h2 className="text-xl font-bold text-white">Analytics</h2><div className="grid gap-3" style={{gridTemplateColumns:'repeat(3, 1fr)'}}><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-amber-400">{state.totalQuizAnswered}</p><p className="text-xs text-gray-500">Quiz</p></div><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-emerald-400">{state.totalQuizAnswered>0?Math.round(state.totalCorrect/state.totalQuizAnswered*100):0}%</p><p className="text-xs text-gray-500">Precision</p></div><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-purple-400">{(state.arenaStats?.totalArenaXp||0)}</p><p className="text-xs text-gray-500">Arena XP</p></div></div><div className="dojo-card p-5"><h3 className="text-sm text-gray-400 font-medium mb-4">FORCES & FAIBLESSES</h3><div className="space-y-3">{branchScores.map(b=>(<div key={b.key}><div className="flex items-center justify-between mb-1"><span className="text-sm text-gray-300">{b.icon} {b.name}</span><span className="text-sm font-mono" style={{color:b.avg>=80?'#10B981':b.avg>=60?'#F59E0B':b.avg>0?'#EF4444':'#4B5563'}}>{b.avg}%</span></div><div className="h-2 bg-dojo-border rounded-full overflow-hidden"><div className="h-full rounded-full" style={{width:b.avg+'%',background:b.color}}/></div></div>))}</div></div><div className="dojo-card p-5"><h3 className="text-sm text-gray-400 font-medium mb-3">IMPORT CSV</h3><label className="inline-block px-4 py-2 bg-dojo-border text-gray-300 rounded-lg cursor-pointer hover:bg-dojo-hover text-sm">Importer <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport}/></label>{state.trades.length>0&&<p className="text-xs text-emerald-400 mt-2">{state.trades.length} trades</p>}</div></div>);
+
+  const handleResetProgress = () => {
+    const ns = defaultState();
+    // Preserve settings/preferences but reset XP and progress
+    ns.lastActiveDate = todayStr();
+    ns.streak = 1;
+    ns.dailyMissions = generateDailyMissions(ns);
+    ns.missionsDate = todayStr();
+    setState(ns);
+    saveState(ns);
+    setShowResetConfirm(false);
+  };
+
+  return(<div className="animate-fade-in space-y-6"><h2 className="text-xl font-bold text-white">Analytics</h2><div className="grid gap-3" style={{gridTemplateColumns:'repeat(3, 1fr)'}}><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-amber-400">{state.totalQuizAnswered}</p><p className="text-xs text-gray-500">Quiz</p></div><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-emerald-400">{state.totalQuizAnswered>0?Math.round(state.totalCorrect/state.totalQuizAnswered*100):0}%</p><p className="text-xs text-gray-500">Precision</p></div><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-purple-400">{(state.arenaStats?.totalArenaXp||0)}</p><p className="text-xs text-gray-500">Arena XP</p></div></div><div className="dojo-card p-5"><h3 className="text-sm text-gray-400 font-medium mb-4">FORCES & FAIBLESSES</h3><div className="space-y-3">{branchScores.map(b=>(<div key={b.key}><div className="flex items-center justify-between mb-1"><span className="text-sm text-gray-300">{b.icon} {b.name}</span><span className="text-sm font-mono" style={{color:b.avg>=80?'#10B981':b.avg>=60?'#F59E0B':b.avg>0?'#EF4444':'#4B5563'}}>{b.avg}%</span></div><div className="h-2 bg-dojo-border rounded-full overflow-hidden"><div className="h-full rounded-full" style={{width:b.avg+'%',background:b.color}}/></div></div>))}</div></div><div className="dojo-card p-5"><h3 className="text-sm text-gray-400 font-medium mb-3">IMPORT CSV</h3><label className="inline-block px-4 py-2 bg-dojo-border text-gray-300 rounded-lg cursor-pointer hover:bg-dojo-hover text-sm">Importer <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport}/></label>{state.trades.length>0&&<p className="text-xs text-emerald-400 mt-2">{state.trades.length} trades</p>}</div>
+
+    {/* PATCH 4: Reset Progress */}
+    <div className="dojo-card p-5 border-red-500/10">
+      <h3 className="text-sm text-gray-400 font-medium mb-3">RESET</h3>
+      {!showResetConfirm ? (
+        <button onClick={() => setShowResetConfirm(true)} className="px-4 py-2 bg-red-500/10 text-red-400 rounded-lg text-sm hover:bg-red-500/20 border border-red-500/20">
+          Reset Progress
+        </button>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm text-red-400">Confirmer le reset ? XP, rank, quiz, arena, challenge seront remis a zero.</p>
+          <div className="flex gap-2">
+            <button onClick={handleResetProgress} className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold border border-red-500/30">Confirmer Reset</button>
+            <button onClick={() => setShowResetConfirm(false)} className="px-4 py-2 bg-dojo-border text-gray-400 rounded-lg text-sm">Annuler</button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>);
 }
 
 // ============================================================
@@ -1819,12 +2256,17 @@ function App() {
       const ns = { ...state };
       if (state.lastActiveDate) {
         const y = new Date(); y.setDate(y.getDate() - 1);
+        // PATCH 4: +2 XP per streak day
         ns.streak = state.lastActiveDate === y.toISOString().split('T')[0] ? (state.streak || 0) + 1 : state.lastActiveDate === today ? state.streak : 1;
+        if (ns.streak > 1) {
+          ns.xp = (ns.xp || 0) + 2; // streak bonus
+        }
       } else { ns.streak = 1; }
       ns.lastActiveDate = today;
       ns.longestStreak = Math.max(ns.streak, state.longestStreak || 0);
       ns.dailyMissions = generateDailyMissions(ns);
       ns.missionsDate = today;
+      ns.rank = getRank(ns.xp);
       setState(ns); saveState(ns);
     }
   }, []);
