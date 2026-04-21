@@ -232,7 +232,37 @@ const QUIZ_TEMPLATES = [
   { id: 'tpl_market_profile', concept: 'market_profile', branch: 'ltf', minRank: 2, generate: () => { const p=[{desc:'Prix oscille entre 2 niveaux depuis 6h.',profile:'Range',wrong:['Expansion','Reversal','Retracement']},{desc:'Gros corps, close au-dela du key level.',profile:'Expansion',wrong:['Range','Manipulation','Retracement']},{desc:'Apres un high, chute brusque.',profile:'Reversal',wrong:['Expansion','Range','Continuation']}]; const c=p[Math.floor(Math.random()*p.length)]; const opts=[c.profile,...c.wrong].sort(()=>Math.random()-0.5); return{q:`MARKET PROFILE : ${c.desc}`,options:opts,correct:opts.indexOf(c.profile),explanation:`Profil ${c.profile}.`}; } },
   { id: 'tpl_emotional', concept: 'patience', branch: 'psychology', minRank: 0, generate: () => { const s=[{sit:'2 pertes. Frustre.',correct:'STOP. Fermer les charts.',wrong:['Doubler le risk','Trader un B','Continuer']},{sit:'4 wins. Invincible.',correct:'ATTENTION. Garder les memes regles.',wrong:['Augmenter le risk','Prendre des C','Trader plus']},{sit:'5 jours sans trade.',correct:'EXCELLENT. 0 perte = capital intact.',wrong:['Baisser les standards','Chercher sur 5min','Changer de marche']}]; const c=s[Math.floor(Math.random()*s.length)]; const opts=[c.correct,...c.wrong].sort(()=>Math.random()-0.5); return{q:`SITUATION : ${c.sit} Reaction ?`,options:opts,correct:opts.indexOf(c.correct),explanation:`${c.correct}`}; } },
   { id: 'tpl_trade_checker', concept: 'rr_21', branch: 'risk', minRank: 2, generate: () => { const p=[{desc:'EURUSD Long, Weekly bearish, RR 2.5:1',issue:'HTF bearish = pas de long',opt:['RR insuffisant','HTF bearish = pas de long','SL mal place','Timing mauvais'],c:1},{desc:'GBPUSD Short, RR 1.8:1, HTF bearish',issue:'RR < 2:1 = PASS',opt:['Setup valide','RR < 2:1 = PASS','Timing mauvais','Il manque la SMT'],c:1}]; const pr=p[Math.floor(Math.random()*p.length)]; return{q:`DIAGNOSTIC : ${pr.desc}. Probleme ?`,options:pr.opt,correct:pr.c,explanation:pr.issue}; } },
-  { id: 'tpl_discipline_check', concept: 'discipline', branch: 'psychology', minRank: 1, generate: () => { const d=[{rule:'Pas de trade avant FOMC.',tempt:'A+ 4h avant FOMC.',correct:'PASS. La regle est la regle.',wrong:['Entrer — A+','Entrer 0.10%','Attendre 2h']},{rule:'RR minimum 2:1.',tempt:'Setup A, RR 1.9:1.',correct:'PASS. 1.9 < 2.',wrong:['Entrer — assez proche','Risk reduit','Ajuster le TP']}]; const c=d[Math.floor(Math.random()*d.length)]; const opts=[c.correct,...c.wrong].sort(()=>Math.random()-0.5); return{q:`DISCIPLINE : ${c.rule} ${c.tempt}`,options:opts,correct:opts.indexOf(c.correct),explanation:`${c.correct}`}; } },
+  { id: 'tpl_discipline_check', concept: 'discipline', branch: 'psychology', minRank: 1, generate: () => { const d=[{rule:'Pas de trade avant FOMC.',tempt:'A+ 4h avant FOMC.',correct:'PASS. La regle est la regle.',wrong:['Entrer — A+','Entrer 0.10%','Attendre 2h']},{rule:'RR minimum 2:1.',tempt:'Setup A, RR 1.9:1.',correct:'PASS. 1.9 < 2.',wrong:['Entrer — assez proche','Risk reduit','Ajuster le TP']},{rule:'Max 1% par trade debutant.',tempt:'A+ en or. Envie de mettre 3%.',correct:'PASS. Max 1% = non negociable.',wrong:['3% car A+','2% compromis','Entrer sans SL']},{rule:'3 pertes = STOP.',tempt:'3e perte. Setup A apparait.',correct:'STOP. La regle est la regle.',wrong:['Entrer — c\'est un A','Risk reduit','Encore 1 essai']}]; const c=d[Math.floor(Math.random()*d.length)]; const opts=[c.correct,...c.wrong].sort(()=>Math.random()-0.5); return{q:`DISCIPLINE : ${c.rule} ${c.tempt}`,options:opts,correct:opts.indexOf(c.correct),explanation:`${c.correct}`}; } },
+
+  // NEW TEMPLATES — Killzone timing
+  { id: 'tpl_kz_timing', concept: 'calendar', branch: 'risk', minRank: 1, generate: () => { const scenarios=[{asset:'Indices',crt:'CRT 4H',hours:'2PM, 6PM, 10PM NY',wrong:['5PM, 9PM, 5AM NY','8AM, 12PM, 4PM NY','Minuit, 6AM, Midi NY']},{asset:'Forex',crt:'CRT 4H',hours:'5PM, 9PM, 5AM NY',wrong:['2PM, 6PM, 10PM NY','8AM, 12PM, 4PM NY','3AM, 7AM, 11AM NY']},{asset:'Indices',crt:'purge',hours:'2AM, 6AM, 10AM NY',wrong:['3AM, 1AM, 5AM NY','10AM, 2PM, 6PM NY','Minuit, 4AM, 8AM NY']},{asset:'Forex',crt:'purge',hours:'3AM, 1AM, 5AM NY',wrong:['2AM, 6AM, 10AM NY','10AM, 2PM, 6PM NY','8AM, 12PM, 4PM NY']}]; const s=scenarios[Math.floor(Math.random()*scenarios.length)]; const opts=[s.hours,...s.wrong].sort(()=>Math.random()-0.5); return{q:`${s.asset} — horaires de ${s.crt} ?`,options:opts,correct:opts.indexOf(s.hours),explanation:`${s.asset} ${s.crt} = ${s.hours}.`}; } },
+
+  // SMT identification
+  { id: 'tpl_smt_id', concept: 'smt', branch: 'ltf', minRank: 1, generate: () => { const pairs=[{a:'EURUSD',b:'GBPUSD',group:'Forex'},{a:'NQ',b:'ES',group:'Indices'},{a:'BTC',b:'ETH',group:'Crypto'},{a:'Gold',b:'Silver',group:'Metaux'}]; const p=pairs[Math.floor(Math.random()*pairs.length)]; const moves=[{aMove:'Higher High',bMove:'Lower High',signal:`SMT bearish sur ${p.b}`,wrong:[`SMT bullish`,`Pas de SMT`,`Signal neutre`]},{aMove:'Lower Low',bMove:'Higher Low',signal:`SMT bullish — ${p.b} refuse de baisser`,wrong:[`SMT bearish`,`Continuation baissiere`,`Signal neutre`]},{aMove:'Higher High',bMove:'Higher High',signal:`Pas de SMT — confirmation de tendance`,wrong:[`SMT bullish`,`SMT bearish`,`Double SMT`]}]; const m=moves[Math.floor(Math.random()*moves.length)]; const opts=[m.signal,...m.wrong].sort(()=>Math.random()-0.5); return{q:`${p.a} fait un ${m.aMove}. ${p.b} fait un ${m.bMove}. C'est :`,options:opts,correct:opts.indexOf(m.signal),explanation:`${m.signal}. ${p.group} : ${p.a}/${p.b} sont correles.`}; } },
+
+  // Monday Range scenarios
+  { id: 'tpl_monday_range', concept: 'crt', branch: 'htf', minRank: 2, generate: () => { const base=+(1.05+Math.random()*0.15).toFixed(4); const range=+(0.005+Math.random()*0.01).toFixed(4); const high=+(base+range).toFixed(4); const low=+base.toFixed(4); const isHTFBull=Math.random()>0.5; const purge=isHTFBull?'low':'high'; const purgePrice=isHTFBull?+(low-0.0005).toFixed(4):+(high+0.0005).toFixed(4); const correct=isHTFBull?`TS du Monday Range low — manipulation avant expansion bullish`:`TS du Monday Range high — manipulation avant expansion bearish`; const wrong=[`Breakout ${isHTFBull?'bearish':'bullish'} confirme`,`Range continuation — attendre`,`Faux signal`]; const opts=[correct,...wrong].sort(()=>Math.random()-0.5); return{q:`Monday Range : high ${high}, low ${low}. HTF ${isHTFBull?'bullish':'bearish'}. Mardi, prix casse le ${purge} a ${purgePrice}. Analyse ?`,options:opts,correct:opts.indexOf(correct),explanation:`HTF ${isHTFBull?'bullish':'bearish'} + sweep ${purge} Monday Range = TS classique. On attend Model 1.`}; } },
+
+  // LTF entry TF alignment
+  { id: 'tpl_tf_alignment', concept: 'market_profile', branch: 'ltf', minRank: 1, generate: () => { const alignments=[{crt:'Weekly',entry:'4H ou Daily',wrong:['M15','M1','1H']},{crt:'Daily',entry:'1H ou 2H',wrong:['M1','4H','Weekly']},{crt:'4H',entry:'M15',wrong:['M1','1H','4H']},{crt:'1H',entry:'M5',wrong:['M1','M15','4H']}]; const a=alignments[Math.floor(Math.random()*alignments.length)]; const opts=[a.entry,...a.wrong].sort(()=>Math.random()-0.5); return{q:`CRT identifie sur le ${a.crt}. Quel TF pour l'entree ?`,options:opts,correct:opts.indexOf(a.entry),explanation:`CRT ${a.crt} -> entree ${a.entry} selon le tableau d'alignement TF.`}; } },
+
+  // Model 2 grading protocol
+  { id: 'tpl_model2_grade', concept: 'grading', branch: 'risk', minRank: 2, generate: () => { const points=[{name:'Bougie epaisse LTF+HTF',val:true},{name:'Horaire CRT',val:Math.random()>0.3},{name:'Horaire purge HP',val:Math.random()>0.3},{name:'HTF PD Array',val:Math.random()>0.3}]; const score=points.filter(p=>p.val).length; const grade=score===4?'A+':score===3?'A':score===2?'B':score===1?'C':'F'; const desc=points.map(p=>`${p.name}: ${p.val?'OK':'NON'}`).join('. '); const wrong=score===4?['A','B','C']:score===3?['A+','B','C']:score===2?['A+','A','C']:['A+','A','B']; const opts=[grade,...wrong].sort(()=>Math.random()-0.5); return{q:`PROTOCOLE MODEL 2 : ${desc}. Grade ?`,options:opts,correct:opts.indexOf(grade),explanation:`${score}/4 points = Grade ${grade}.`}; } },
+
+  // Trade diagnostic (expanded)
+  { id: 'tpl_trade_diag', concept: 'rr_21', branch: 'risk', minRank: 2, generate: () => { const diags=[{desc:'EURUSD Long, Weekly bearish, RR 3:1, A+',issue:'HTF bearish = pas de long',wrong:['Setup valide','RR compense le HTF','Entrer petit risk']},{desc:'GBPUSD Short, RR 1.8:1, HTF bearish, KZ London',issue:'RR < 2:1 = PASS meme si tout le reste est bon',wrong:['Setup valide — KZ compense','Entrer avec SL serre','Ca passe a 1.8']},{desc:'BTCUSD Long, HTF bullish, RR 4:1, FOMC demain',issue:'FOMC -48h = pas de trade',wrong:['A+ justifie','Risk reduit OK','Entrer avant le FOMC']},{desc:'NQ Short, HTF bearish, RR 2.5:1, 3PM NY, Grade A',issue:'3PM NY pas dans les KZ HP — setup perd un point',wrong:['Setup valide','3PM OK pour NY','L\'heure n\'importe pas']},{desc:'EURUSD Long, HTF bullish, RR 2.2:1, London KZ, bougie FINE sur 4H',issue:'Bougie fine = pas de conviction. Model 2 point 1 echoue',wrong:['Setup valide','Fine mais HTF OK','Entrer quand meme']}]; const d=diags[Math.floor(Math.random()*diags.length)]; const opts=[d.issue,...d.wrong].sort(()=>Math.random()-0.5); return{q:`DIAGNOSTIC : ${d.desc}. Probleme ?`,options:opts,correct:opts.indexOf(d.issue),explanation:d.issue}; } },
+
+  // CRT validation (OHLC/OLHC)
+  { id: 'tpl_crt_valid', concept: 'crt', branch: 'htf', minRank: 1, generate: () => { const sequences=[{seq:'Open -> Low -> High -> Close (au-dessus de l\'open)',valid:true,type:'OLHC Bullish'},{seq:'Open -> High -> Low -> Close (en-dessous de l\'open)',valid:true,type:'OHLC Bearish'},{seq:'Open -> High -> Low -> Close au-dessus de l\'open (range)',valid:false,type:'Invalide — close contredit la sequence'},{seq:'Open -> range etroit -> close = open',valid:false,type:'Invalide — pas de sequence directionnelle'}]; const s=sequences[Math.floor(Math.random()*sequences.length)]; const correct=s.valid?`CRT valide — ${s.type}`:'CRT invalide — PASS'; const wrong=s.valid?['CRT invalide — PASS','Range — attendre','Manipulation — pas un CRT']:['CRT valide bullish','CRT valide bearish','Continuation']; const opts=[correct,...wrong].sort(()=>Math.random()-0.5); return{q:`SEQUENCE : ${s.seq}. CRT valide ?`,options:opts,correct:opts.indexOf(correct),explanation:`${correct}.`}; } },
+
+  // SL placement scenarios
+  { id: 'tpl_sl_scenario', concept: 'sl_placement', branch: 'risk', minRank: 1, generate: () => { const scenarios=[{setup:'Long via TS. Meche de manipulation descend a 1.0820.',correct:'SL sous 1.0820 + buffer spread',wrong:['SL a 1.0820 exact','SL 10 pips sous entry','SL au milieu du CRT']},{setup:'Short via Model 1. OB bearish entre 1.2450-1.2480.',correct:'SL au-dessus de 1.2480 + buffer',wrong:['SL a 1.2480 exact','SL 15 pips au-dessus entry','SL au high du jour']},{setup:'Long. TS low a 28500 sur BTC.',correct:'SL sous 28500 + buffer',wrong:['SL a 28500','SL -100$ fixe','Pas de SL — BTC remonte toujours']}]; const s=scenarios[Math.floor(Math.random()*scenarios.length)]; const opts=[s.correct,...s.wrong].sort(()=>Math.random()-0.5); return{q:`SL PLACEMENT : ${s.setup} Ou placer le SL ?`,options:opts,correct:opts.indexOf(s.correct),explanation:`${s.correct}. SL TOUJOURS au-dela de la structure + buffer.`}; } },
+
+  // Psychology advanced (more scenarios)
+  { id: 'tpl_psycho_advanced', concept: 'fomo', branch: 'psychology', minRank: 2, generate: () => { const sits=[{sit:'Tu rates un move de +200 pips. Tu vois le chart monter sans toi.',correct:'Accepter le miss. Le prochain setup viendra.',wrong:['Entrer maintenant — il reste du move','Shorter le sommet par frustration','Augmenter le risk sur le prochain']},{sit:'Ton copain te montre ses gains de +500%. Tu doutes de ton systeme.',correct:'Ignorer. Chaque trader a son systeme. Focus sur le tien.',wrong:['Copier sa methode','Augmenter ton risk','Trader plus souvent']},{sit:'Apres 1 semaine de gains, tu perds 2 trades. Tu veux te refaire.',correct:'STOP. Revenge trading = danger #1. Fermer les charts.',wrong:['Doubler la mise','Un dernier trade pour la journee','Baisser le TF pour trouver plus de setups']},{sit:'Tu viens de gagner un trade A+ a 5R. Tu veux enchainer.',correct:'ATTENTION. L\'euphorie pousse a baisser les standards. Prends une pause.',wrong:['Enchainer — tu es dans la zone','Augmenter le risk','Prendre un B+ pour capitaliser']},{sit:'Ton journal montre 3x la meme erreur : entrer trop tot.',correct:'STOP trading. Analyser l\'erreur. Plan correctif avant de reprendre.',wrong:['Continuer — la prochaine sera la bonne','Changer de timeframe','Ignorer — tout le monde fait des erreurs']}]; const s=sits[Math.floor(Math.random()*sits.length)]; const opts=[s.correct,...s.wrong].sort(()=>Math.random()-0.5); return{q:`PSYCHO : ${s.sit}`,options:opts,correct:opts.indexOf(s.correct),explanation:`${s.correct}`}; } },
+
+  // HTF narrative expanded (more combos)
+  { id: 'tpl_htf_expanded', concept: 'htf_trend', branch: 'htf', minRank: 1, generate: () => { const combos=[{m:'Monthly bullish',w:'Weekly pullback',d:'Daily TS du low weekly',bias:'Bullish — le pullback est fini, TS confirme',wrong:['Bearish — Weekly pullback','Neutre','Attendre Monthly']},{m:'Monthly bearish',w:'Weekly bullish (contre-tendance)',d:'Daily range',bias:'Prudent/Bearish — Monthly domine, Weekly = contre-tendance',wrong:['Bullish — Weekly monte','Neutre — conflit','Agressif long']},{m:'Monthly range',w:'Weekly range',d:'Daily breakout up',bias:'Prudent — Monthly+Weekly range, Daily seul ne suffit pas',wrong:['Bullish agressif','Bearish','Normal — suivre Daily']},{m:'Monthly bullish 6 mois',w:'Weekly close above previous high',d:'Daily pullback vers OB',bias:'Bullish fort — Monthly+Weekly alignes, Daily pullback = entree',wrong:['Neutre','Attendre confirmation','Bearish — Daily baisse']},{m:'Monthly bearish',w:'Weekly close below previous low',d:'Daily TS du high',bias:'Bearish fort — triple alignement, TS confirme',wrong:['Bullish — TS = reversal','Neutre','Attendre le Monthly']}]; const c=combos[Math.floor(Math.random()*combos.length)]; const opts=[c.bias,...c.wrong].sort(()=>Math.random()-0.5); return{q:`HTF : ${c.m}. ${c.w}. ${c.d}. Bias ?`,options:opts,correct:opts.indexOf(c.bias),explanation:`${c.bias}.`}; } },
 ];
 
 // ============================================================
@@ -1066,26 +1096,53 @@ function generateDailyMissions(state) {
 
 function generateQuizSet(state, branch = null, count = 15) {
   const rankIdx = getRank(state.xp);
-  const fixedCount = Math.floor(count * 0.4);
+  // 25% fixed, 75% generated — maximise variety via procedural templates
+  const fixedCount = Math.floor(count * 0.25);
   const generatedCount = count - fixedCount;
+
+  // --- Fixed questions: shuffle the ENTIRE pool, slight weak-concept bias ---
   let fixedPool = QUIZ_DB.filter(q => { const qRankIdx=RANKS.findIndex(r=>r.id===q.rank); return qRankIdx<=rankIdx+1; });
   if (branch) fixedPool = fixedPool.filter(q => q.branch === branch);
-  fixedPool.sort((a,b) => { const aS=state.conceptScores[a.concept],bS=state.conceptScores[b.concept]; return (aS?aS.correct/aS.total:0.5)-(bS?bS.correct/bS.total:0.5); });
-  const fixedQuestions = [];
-  const pPool = fixedPool.slice(0, Math.max(30, fixedPool.length));
-  while (fixedQuestions.length < Math.min(fixedCount, pPool.length)) {
-    const idx = Math.floor(Math.random() * Math.min(pPool.length, fixedCount * 3));
-    const q = pPool[idx];
-    if (q && !fixedQuestions.find(fq => fq.id === q.id)) fixedQuestions.push(q);
+  // Fisher-Yates shuffle first for true randomness
+  for(let i=fixedPool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fixedPool[i],fixedPool[j]]=[fixedPool[j],fixedPool[i]];}
+  // Light weak-concept boost: move 30% of weak-concept Qs toward front (not hard sort)
+  const weakBoost = Math.floor(fixedPool.length * 0.3);
+  const weakQs = fixedPool.filter(q => { const s=state.conceptScores[q.concept]; return s ? s.correct/s.total < 0.5 : true; }).slice(0, weakBoost);
+  const rest = fixedPool.filter(q => !weakQs.includes(q));
+  // Interleave: weak questions sprinkled in first half
+  fixedPool = [];
+  let wi=0, ri=0;
+  while(wi<weakQs.length||ri<rest.length){
+    if(wi<weakQs.length && Math.random()<0.4){fixedPool.push(weakQs[wi++]);}
+    else if(ri<rest.length){fixedPool.push(rest[ri++]);}
+    else if(wi<weakQs.length){fixedPool.push(weakQs[wi++]);}
   }
+  const fixedQuestions = [];
+  const usedIds = new Set();
+  for(let i=0; i<fixedPool.length && fixedQuestions.length<fixedCount; i++){
+    if(!usedIds.has(fixedPool[i].id)){usedIds.add(fixedPool[i].id);fixedQuestions.push(fixedPool[i]);}
+  }
+
+  // --- Generated questions: round-robin across ALL templates for max variety ---
   let templates = QUIZ_TEMPLATES.filter(t => t.minRank <= rankIdx + 1);
   if (branch) templates = templates.filter(t => t.branch === branch);
+  // Shuffle templates
+  for(let i=templates.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[templates[i],templates[j]]=[templates[j],templates[i]];}
   const generated = [];
-  let attempts = 0;
-  while (generated.length < generatedCount && templates.length > 0 && attempts < generatedCount * 3) {
+  let tIdx = 0, attempts = 0;
+  const usedTexts = new Set();
+  while (generated.length < generatedCount && templates.length > 0 && attempts < generatedCount * 5) {
     attempts++;
-    const t = templates[Math.floor(Math.random() * templates.length)];
-    try { const q=t.generate(); generated.push({...q,concept:t.concept,branch:t.branch,id:'gen_'+t.id+'_'+Date.now()+'_'+attempts,isGenerated:true}); } catch(e) {}
+    const t = templates[tIdx % templates.length];
+    tIdx++;
+    try {
+      const q = t.generate();
+      const sig = q.question.slice(0,60);
+      if(!usedTexts.has(sig)){
+        usedTexts.add(sig);
+        generated.push({...q,concept:t.concept,branch:t.branch,id:'gen_'+t.id+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),isGenerated:true});
+      }
+    } catch(e) {}
   }
   return [...fixedQuestions, ...generated].sort(() => Math.random() - 0.5);
 }
