@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>700S DOJO v4 — Trading Mastery Arena</title>
+    <meta name="description" content="700S DOJO v4 — CRT x ICT Trading Mastery with Interactive Chart Arena" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              dojo: '#0A0A0F',
+              'dojo-card': '#12121A',
+              'dojo-border': '#1E1E2E',
+              'dojo-hover': '#1A1A28',
+              gold: '#D4A853',
+              'gold-dim': '#8B7335',
+              fire: '#EF4444',
+              ice: '#3B82F6',
+              emerald: '#10B981',
+              purple: '#8B5CF6',
+              amber: '#F59E0B',
+              cyan: '#06B6D4',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      body { background: #0A0A0F; color: #E5E5E5; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #0A0A0F; }
+      ::-webkit-scrollbar-thumb { background: #2A2A3A; border-radius: 3px; }
+
+      @keyframes pulse-glow { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+      @keyframes streak-fire { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.15); } }
+      @keyframes xp-fill { from { width: 0; } }
+      @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+      @keyframes rank-up { 0% { transform: scale(1); } 50% { transform: scale(1.2); filter: brightness(1.5); } 100% { transform: scale(1); } }
+      @keyframes flash-green { 0% { box-shadow: inset 0 0 60px #10B98150; } 100% { box-shadow: none; } }
+      @keyframes flash-red { 0% { box-shadow: inset 0 0 60px #EF444450; } 100% { box-shadow: none; } }
+      @keyframes candle-appear { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
+      .animate-slide-up { animation: slide-up 0.4s ease-out; }
+      .animate-fade-in { animation: fade-in 0.3s ease-out; }
+      .animate-shake { animation: shake 0.3s ease-out; }
+      .animate-rank-up { animation: rank-up 0.6s ease-out; }
+      .streak-flame { animation: streak-fire 1s ease-in-out infinite; }
+      .flash-correct { animation: flash-green 0.5s ease-out; }
+      .flash-wrong { animation: flash-red 0.5s ease-out; }
+
+      .nav-item { transition: all 0.2s; position: relative; }
+      .nav-item:hover { color: #D4A853; }
+      .nav-item.active { color: #D4A853; }
+      .nav-item.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: #D4A853; border-radius: 1px; }
+
+      .dojo-card { background: #12121A; border: 1px solid #1E1E2E; border-radius: 12px; transition: all 0.2s; }
+      .dojo-card:hover { border-color: #2A2A3A; background: #15151F; }
+
+      .mission-pending { border-left: 3px solid #6B7280; }
+      .mission-completed { border-left: 3px solid #10B981; }
+
+      .quiz-option { transition: all 0.15s; cursor: pointer; }
+      .quiz-option:hover { background: #1A1A28; border-color: #D4A853; }
+      .quiz-option.selected { border-color: #D4A853; background: #D4A85315; }
+      .quiz-option.correct { border-color: #10B981; background: #10B98115; }
+      .quiz-option.wrong { border-color: #EF4444; background: #EF444415; }
+
+      .skill-node { transition: all 0.2s; cursor: pointer; }
+      .skill-node:hover { transform: scale(1.08); }
+      .skill-node.locked { opacity: 0.35; filter: grayscale(1); }
+
+      .progress-ring-circle { transition: stroke-dashoffset 0.5s ease; }
+
+      .kb-card { cursor: pointer; transition: all 0.2s; }
+      .kb-card:hover { border-color: #D4A853; }
+
+      .arena-btn { background: linear-gradient(135deg, #1A1A28, #12121A); border: 1px solid #2A2A3A; cursor: pointer; transition: all 0.2s; }
+      .arena-btn:hover { border-color: #D4A853; transform: translateY(-1px); }
+      .arena-btn:active { transform: scale(0.98); }
+      .arena-btn.primary { background: linear-gradient(135deg, #D4A85330, #D4A85310); border-color: #D4A85350; }
+
+      canvas { display: block; touch-action: none; }
+
+      @media (max-width: 768px) {
+        .nav-scroll { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .nav-scroll::-webkit-scrollbar { display: none; }
+        .grid-responsive { grid-template-columns: 1fr !important; }
+        .hide-mobile { display: none !important; }
+      }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo, useRef } = React;
+
+// ============================================================
+// CONSTANTS & DATA
+// ============================================================
+
+const STORAGE_KEY = '700s_dojo_v1';
+
+// PATCH 5: Exponential XP requirements + daily cap
+const RANKS = [
+  { id: 'iron', name: 'Iron', color: '#8B8B8B', xpRequired: 0, label: 'Debutant', icon: '\u2B21' },
+  { id: 'bronze', name: 'Bronze', color: '#CD7F32', xpRequired: 500, label: 'Apprenti', icon: '\u2B21' },
+  { id: 'silver', name: 'Silver', color: '#C0C0C0', xpRequired: 1700, label: 'Initie', icon: '\u2B21' },
+  { id: 'gold', name: 'Gold', color: '#FFD700', xpRequired: 4200, label: 'Confirme', icon: '\u2B21' },
+  { id: 'platinum', name: 'Platinum', color: '#00CED1', xpRequired: 9200, label: 'Tacticien', icon: '\u2B21' },
+  { id: 'diamond', name: 'Diamond', color: '#B9F2FF', xpRequired: 19200, label: 'Expert', icon: '\uD83D\uDC8E' },
+  { id: 'master', name: 'Master', color: '#9B59B6', xpRequired: 39200, label: 'Maitre', icon: '\uD83D\uDC51' },
+  { id: 'radiant', name: 'Radiant', color: '#FFE566', xpRequired: 79200, label: 'Legende', icon: '\u2726' },
+];
+
+const DAILY_XP_CAP = 150;
+const DRILL_DIMINISH_THRESHOLD = 30;
+
+const SKILL_BRANCHES = {
+  htf: { name: 'HTF Narrative', icon: '\uD83D\uDD2D', color: '#8B5CF6', concepts: [
+    { id: 'htf_trend', name: 'HTF Trend', desc: 'Close Above/Below, Wick Above/Below sur key levels' },
+    { id: 'crt', name: 'CRT Foundation', desc: 'Candle Range Theory — OHLC/OLHC structure' },
+    { id: 'quarterly', name: 'Quarterly Theory', desc: 'Q2-Q3 = HP, Q1 attention, saisonnalite' },
+    { id: 'time_price', name: 'Time Before Price', desc: 'Monthly > Weekly > Daily > Intraday' },
+    { id: 'decomposition', name: 'Decomposition HTF', desc: 'Double Purge, CRT, SMT sur HTF' },
+  ]},
+  ltf: { name: 'LTF Execution', icon: '\uD83C\uDFAF', color: '#06B6D4', concepts: [
+    { id: 'dol', name: 'DOL', desc: 'Degree of Liquidity — attendre obligatoirement le revisit' },
+    { id: 'order_flow', name: 'Order Flow', desc: 'Flux d\'ordres, manipulation vs expansion' },
+    { id: 'smt', name: 'SMT', desc: 'Smart Money Transformation entre paires correlees' },
+    { id: 'fvg', name: 'FVG', desc: 'Fair Value Gap — ecart a combler ou ecarter' },
+    { id: 'market_profile', name: 'Market Profile', desc: 'Range, Expansion, Reversal, Retracement' },
+  ]},
+  entries: { name: 'Entry Models', icon: '\u26A1', color: '#F59E0B', concepts: [
+    { id: 'model1', name: 'Model 1', desc: 'HTF + Candle Choice + Trade Pick + Key Level + CRT' },
+    { id: 'model2', name: 'Model 2', desc: 'Model 1 + Manipulation x Expansion Analysis' },
+    { id: 'model3', name: 'Model 3', desc: 'Breaker Block integration avancee' },
+    { id: 'ote', name: 'OTE', desc: 'Order Trading Evaluation — fermetures algorithme pieges' },
+    { id: 'mss_ote', name: 'MSS + OTE', desc: 'Market Structure Shift + OTE = entree la plus safe' },
+  ]},
+  patterns: { name: 'Pattern Recognition', icon: '\uD83D\uDD0D', color: '#10B981', concepts: [
+    { id: 'turtle_soup', name: 'Turtle Soup', desc: 'Purge de liquidite + reversal immediat' },
+    { id: 'double_purge', name: 'Double Purge', desc: '2 DOL validees = haute probabilite reversal' },
+    { id: 'butterfly', name: 'Butterfly Effect', desc: 'Manipulation centrale + expansions symetriques' },
+    { id: 'ob_brk', name: 'OB / Breaker', desc: 'Order Block et Breaker Block identification' },
+    { id: 'banana_crt', name: 'Banana CRT', desc: 'Variation CRT specialisee week patterns' },
+  ]},
+  risk: { name: 'Risk Management', icon: '\uD83D\uDEE1\uFE0F', color: '#EF4444', concepts: [
+    { id: 'rr_21', name: 'RR 2:1 Minimum', desc: 'Non-negociable. RR < 2:1 = PASS' },
+    { id: 'sl_placement', name: 'SL Placement', desc: 'Au-dela de la bougie manipulation, jamais dedans' },
+    { id: 'position_sizing', name: 'Position Sizing', desc: '0.50% debutant, max 1%, grading-based' },
+    { id: 'calendar', name: 'Calendar Integration', desc: 'NFP/FOMC -48h, PMI week 1, purge hours' },
+    { id: 'grading', name: 'Setup Grading', desc: 'A+ a C — trader uniquement A+ et A' },
+  ]},
+  psychology: { name: 'Psychology', icon: '\uD83E\uDDE0', color: '#EC4899', concepts: [
+    { id: 'patience', name: 'Patience', desc: 'Attendre le setup, pas chercher le setup' },
+    { id: 'fomo', name: 'FOMO Control', desc: 'Pas de FOMO, pas de revenge trading' },
+    { id: 'error_logging', name: 'Error Logging', desc: 'Si meme erreur 3x = STOP et relearn' },
+    { id: 'self_knowledge', name: 'Self-Knowledge', desc: 'Se connaitre par coeur avant de scalper' },
+    { id: 'discipline', name: 'Discipline', desc: 'Le systeme se repete. Pas d\'excitation, pas de gambling.' },
+  ]},
+};
+
+// ============================================================
+// KNOWLEDGE BASE — 30 concepts complets
+// ============================================================
+
+const KNOWLEDGE_BASE = [
+  { id: 'crt', name: 'CRT (Candle Range Theory)', category: 'htf', shortDesc: 'Fondation du systeme — l\'OHLC/OLHC encapsule tous les concepts ICT', fullDesc: 'La Candle Range Theory est LA fondation du systeme 700S ICT. Chaque bougie raconte une histoire algorithmique. Un CRT valide respecte la logique structurelle OHLC ou OLHC.', rules: ['Le CRT encapsule TOUS les concepts ICT','CRT se trade sur Weekly, Daily, 4H','50% d\'un CRT = partiel ou full TP','CRT valide = sequence OHLC ou OLHC intacte'], mistakes: ['Trader un CRT invalide','Ignorer le CRT HTF','Appliquer le CRT mecaniquement sans contexte'], related: ['htf_trend','time_price','model1'] },
+  { id: 'htf_trend', name: 'HTF Narrative', category: 'htf', shortDesc: 'Analyse obligatoire Monthly > Weekly > Daily avant tout trade', fullDesc: 'Le HTF Narrative est l\'analyse obligatoire du trend sur les hauts timeframes. Monthly > Weekly > Daily.', rules: ['HTF bullish = longs uniquement','HTF bearish = shorts uniquement','Sans HTF narrative claire, PAS de trade'], mistakes: ['Trader un long quand le Weekly est bearish','Ne pas verifier le HTF'], related: ['crt','time_price','quarterly'] },
+  { id: 'quarterly', name: 'Quarterly Theory', category: 'htf', shortDesc: 'Q2-Q3 = HP, Q1 attention', fullDesc: 'Q2-Q3 haute probabilite. Q1 attention.', rules: ['Q2-Q3 = hautes probabilites','Q1 = attention'], mistakes: ['Ignorer la saisonnalite'], related: ['htf_trend','calendar'] },
+  { id: 'time_price', name: 'Time Before Price', category: 'htf', shortDesc: 'Le temps > le prix', fullDesc: 'Le temps prime sur le prix.', rules: ['Le TEMPS > le PRIX'], mistakes: ['Ignorer les cycles temporels'], related: ['crt','htf_trend'] },
+  { id: 'decomposition', name: 'Decomposition HTF', category: 'htf', shortDesc: 'Lecture multi-TF', fullDesc: 'La decomposition HTF est l\'art de lire les structures sur les TF eleves.', rules: ['Analyser CRT sur Monthly, Weekly ET Daily'], mistakes: ['Ne regarder qu\'un seul timeframe'], related: ['crt','htf_trend','smt'] },
+  { id: 'dol', name: 'DOL (Degree of Liquidity)', category: 'ltf', shortDesc: 'Attente OBLIGATOIRE avant entry', fullDesc: 'La DOL est le niveau ou l\'algo absorbe la liquidite.', rules: ['Attendre OBLIGATOIREMENT le revisit de la DOL'], mistakes: ['Entrer avant que la DOL soit revisitee'], related: ['order_flow','smt'] },
+  { id: 'order_flow', name: 'Order Flow', category: 'ltf', shortDesc: 'Manipulation vs expansion vs retracement', fullDesc: 'L\'order flow se decompose en 3 phases.', rules: ['Manipulation = wick sans close','Expansion = close au-dela d\'un key level'], mistakes: ['Confondre manipulation et expansion'], related: ['dol','model2'] },
+  { id: 'smt', name: 'SMT', category: 'ltf', shortDesc: 'Divergence entre paires correlees', fullDesc: 'La SMT est une divergence entre paires correlees.', rules: ['SMT = un fait new high/low et l\'autre NON'], mistakes: ['Confondre correlation de vitesse avec SMT'], related: ['dol','htf_trend'] },
+  { id: 'fvg', name: 'FVG', category: 'ltf', shortDesc: 'Ecart entre 3 bougies consecutives', fullDesc: 'Le Fair Value Gap est un ecart de prix entre 3 bougies.', rules: ['FVG = 3 bougies ou meche 1 ne touche pas meche 3'], mistakes: ['Ignorer les FVG'], related: ['order_flow','ob_brk'] },
+  { id: 'market_profile', name: 'Market Profile', category: 'ltf', shortDesc: 'Range, Expansion, Reversal, Retracement', fullDesc: 'Les 4 Market Profiles decrivent le regime du marche.', rules: ['Range = attendre le breakout','Expansion = meilleur trade'], mistakes: ['Trader un range comme une expansion'], related: ['order_flow','dol'] },
+  { id: 'model1', name: 'Model 1', category: 'entries', shortDesc: '5 elements OBLIGATOIRES', fullDesc: 'HTF + Candle Choice + Trade Pick + Key Level + CRT.', rules: ['5 elements sont TOUS obligatoires'], mistakes: ['Entrer avec 4/5 elements'], related: ['htf_trend','crt','model2'] },
+  { id: 'model2', name: 'Model 2', category: 'entries', shortDesc: 'Model 1 + AMD', fullDesc: 'Le Model 2 ajoute Manipulation vs Expansion.', rules: ['Model 2 = Model 1 + AMD analysis'], mistakes: ['Entrer pendant la manipulation'], related: ['model1','order_flow'] },
+  { id: 'model3', name: 'Model 3', category: 'entries', shortDesc: 'Breaker Block integration', fullDesc: 'Le Model 3 utilise les Breaker Blocks.', rules: ['Breaker = OB casse devenu le contraire'], mistakes: ['Confondre OB et Breaker'], related: ['ob_brk','fvg'] },
+  { id: 'ote', name: 'OTE', category: 'entries', shortDesc: 'Fermetures algorithme pour pieger', fullDesc: 'L\'OTE revele les fermetures specifiques.', rules: ['Verifier le contexte : apres un MSS ?'], mistakes: ['Trader chaque fermeture a 50% comme un OTE'], related: ['mss_ote','model1'] },
+  { id: 'mss_ote', name: 'MSS + OTE', category: 'entries', shortDesc: 'Entree la plus safe du systeme', fullDesc: 'MSS + OTE = double validation.', rules: ['OTE doit suivre le MSS dans les 2-3 bougies'], mistakes: ['Entrer sur le MSS seul'], related: ['ote','model1'] },
+  { id: 'turtle_soup', name: 'Turtle Soup', category: 'patterns', shortDesc: 'Purge de liquidite + reversal immediat', fullDesc: 'Le Turtle Soup est le pattern fondamental de purge.', rules: ['Meilleur TS = en debut de candle','SL au-dela de la bougie manipulation'], mistakes: ['Placer le SL dans la bougie de manipulation'], related: ['dol','double_purge'] },
+  { id: 'double_purge', name: 'Double Purge', category: 'patterns', shortDesc: '2 DOL validees = haute probabilite', fullDesc: 'Le prix purge les deux cotes du range.', rules: ['DP Weekly + Monthly directionnel = A+'], mistakes: ['Confondre un range normal avec une Double Purge'], related: ['turtle_soup','dol'] },
+  { id: 'butterfly', name: 'Butterfly Effect', category: 'patterns', shortDesc: 'Manipulation centrale + expansions symetriques', fullDesc: 'Pattern symetrique avec manipulation centrale.', rules: ['Plus fiable sur Daily/Weekly'], mistakes: ['Confondre un double top avec un Butterfly'], related: ['double_purge','turtle_soup'] },
+  { id: 'ob_brk', name: 'OB / Breaker', category: 'patterns', shortDesc: 'Order Block = launchpad algo', fullDesc: 'L\'Order Block est la derniere bougie opposee.', rules: ['OB = derniere bougie opposee avant displacement'], mistakes: ['Confondre n\'importe quelle bougie avec un OB'], related: ['fvg','model3'] },
+  { id: 'banana_crt', name: 'Banana CRT', category: 'patterns', shortDesc: 'Courbure progressive en arc', fullDesc: 'Variation du CRT avec courbure progressive.', rules: ['Plus visible sur les weekly ranges'], mistakes: ['Forcer le pattern sur des TF trop bas'], related: ['crt','decomposition'] },
+  { id: 'rr_21', name: 'RR 2:1 Minimum', category: 'risk', shortDesc: 'Non-negociable', fullDesc: 'Le RR minimum 2:1 est la regle fondamentale.', rules: ['RR < 2:1 = PASS, toujours'], mistakes: ['Prendre un trade a 1.5:1'], related: ['sl_placement','position_sizing'] },
+  { id: 'sl_placement', name: 'SL Placement', category: 'risk', shortDesc: 'Au-dela de la bougie manipulation', fullDesc: 'Le SL doit TOUJOURS etre au-DELA de la manipulation.', rules: ['SL au-DELA de la bougie manipulation','Ajouter un buffer pour le spread'], mistakes: ['Placer le SL dans la bougie de manipulation'], related: ['rr_21','position_sizing'] },
+  { id: 'position_sizing', name: 'Position Sizing', category: 'risk', shortDesc: 'Debutant 0.10-0.30%', fullDesc: 'La gestion de taille de position.', rules: ['Debutant : 0.10-0.30% par trade'], mistakes: ['Mettre 5% sur chaque A+'], related: ['rr_21','grading'] },
+  { id: 'calendar', name: 'Calendar & Sessions', category: 'risk', shortDesc: 'NFP/FOMC -48h', fullDesc: 'Le calendrier economique est non-negociable.', rules: ['NFP/FOMC : pas de trade 1-2 jours avant','Heures de purge HP : 1AM-4AM, 8AM-11AM NY'], mistakes: ['Trader la veille du FOMC'], related: ['grading','patience'] },
+  { id: 'grading', name: 'Setup Grading', category: 'risk', shortDesc: 'A+ a C', fullDesc: 'Le grading est le systeme d\'evaluation.', rules: ['A+ = 5% max, A = 3%, B+ = 2%'], mistakes: ['Baisser les standards'], related: ['rr_21','position_sizing'] },
+  { id: 'patience', name: 'Patience', category: 'psychology', shortDesc: '80%+ du temps = attente', fullDesc: 'La patience EST la strategie.', rules: ['80%+ du temps = attente','0 trade = 0 perte = victoire'], mistakes: ['Se sentir coupable de ne pas trader'], related: ['discipline','fomo'] },
+  { id: 'fomo', name: 'FOMO Control', category: 'psychology', shortDesc: 'Pas de FOMO, pas de revenge', fullDesc: 'Le FOMO et le revenge trading explosent les comptes.', rules: ['Pas de FOMO','3 pertes = STOP'], mistakes: ['Entrer apres une explosion de 80+ pips'], related: ['patience','discipline'] },
+  { id: 'error_logging', name: 'Error Logging', category: 'psychology', shortDesc: 'Journal de trading', fullDesc: 'Le journal est un outil de diagnostic.', rules: ['Erreur repetee 3x = STOP'], mistakes: ['Ignorer les patterns d\'erreurs'], related: ['self_knowledge','discipline'] },
+  { id: 'self_knowledge', name: 'Self-Knowledge', category: 'psychology', shortDesc: 'Se connaitre par coeur', fullDesc: 'Confiance = competence = maitrise.', rules: ['Commencer Daily/Weekly, pas 4H'], mistakes: ['Trader le 4H sans maitrise du Daily'], related: ['patience','discipline'] },
+  { id: 'discipline', name: 'Discipline', category: 'psychology', shortDesc: 'Le systeme se repete', fullDesc: 'Les regles ne changent pas avec les emotions.', rules: ['L\'euphorie abaisse les standards autant que le tilt'], mistakes: ['Changer les regles apres des gains'], related: ['patience','fomo'] },
+];
+
+const KB_CATEGORIES = [
+  { id: 'htf', name: 'HTF Narrative', icon: '\uD83D\uDD2D', color: '#8B5CF6' },
+  { id: 'ltf', name: 'LTF Execution', icon: '\uD83C\uDFAF', color: '#06B6D4' },
+  { id: 'entries', name: 'Entry Models', icon: '\u26A1', color: '#F59E0B' },
+  { id: 'patterns', name: 'Patterns', icon: '\uD83D\uDD0D', color: '#10B981' },
+  { id: 'risk', name: 'Risk Management', icon: '\uD83D\uDEE1\uFE0F', color: '#EF4444' },
+  { id: 'psychology', name: 'Psychology', icon: '\uD83E\uDDE0', color: '#EC4899' },
+];
+
+// ============================================================
+// QUIZ TEMPLATES (40+ procedural)
+// ============================================================
+
+const QUIZ_TEMPLATES = [
+  { id: 'tpl_position_sizing', concept: 'position_sizing', branch: 'risk', minRank: 1, generate: () => { const caps=[2000,5000,10000,20000,50000]; const cap=caps[Math.floor(Math.random()*caps.length)]; const risks=[0.3,0.5,1,2]; const ri=Math.floor(Math.random()*risks.length); const riskPct=risks[ri]; const sls=[15,25,40,60]; const slPips=sls[Math.floor(Math.random()*sls.length)]; const riskEur=cap*riskPct/100; const eurPerPip=riskEur/slPips; const lots=eurPerPip/10; const w1=(lots*1.5).toFixed(2),w2=(lots*0.5).toFixed(2),w3=(lots*2.2).toFixed(2); const opts=[lots.toFixed(2)+' lot(s)',w1+' lot(s)',w2+' lot(s)',w3+' lot(s)']; const ans=[...opts].sort(()=>Math.random()-0.5); return{q:`Capital ${cap.toLocaleString()} EUR. Risk ${riskPct}%. SL = ${slPips} pips. Taille de position ?`,options:ans,correct:ans.indexOf(opts[0]),explanation:`Risk = ${riskEur.toFixed(0)} EUR. ${riskEur.toFixed(0)}/${slPips} = ${eurPerPip.toFixed(2)} EUR/pip = ${lots.toFixed(2)} lots.`}; } },
+  { id: 'tpl_rr_calc', concept: 'rr_21', branch: 'risk', minRank: 1, generate: () => { const isLong=Math.random()>0.5; const entry=(1.0+Math.random()*0.5).toFixed(4); const slDist=0.001+Math.random()*0.005; const sl=isLong?(parseFloat(entry)-slDist).toFixed(4):(parseFloat(entry)+slDist).toFixed(4); const risk=Math.abs(parseFloat(entry)-parseFloat(sl)); const multipliers=[1.5,2.0,2.8,3.5]; const tps=multipliers.map(m=>isLong?(parseFloat(entry)+risk*m).toFixed(4):(parseFloat(entry)-risk*m).toFixed(4)); const labels=tps.map((tp,i)=>`${tp} (RR ${multipliers[i]}:1)`); return{q:`Trade ${isLong?'Long':'Short'}. Entry: ${entry}, SL: ${sl}. Quel TP donne RR minimum 2:1 ?`,options:labels,correct:1,explanation:`RR minimum 2:1. ${tps[1]} est le minimum acceptable.`}; } },
+  { id: 'tpl_htf_narrative', concept: 'htf_trend', branch: 'htf', minRank: 0, generate: () => { const s=[{m:'Monthly bullish',w:'Weekly bullish',d:'Daily pullback',bias:'Bullish — longs uniquement',wrong:['Bearish','Neutre','Les 2 directions']},{m:'Monthly bearish',w:'Weekly bearish',d:'Daily range',bias:'Bearish — shorts uniquement',wrong:['Bullish','Neutre','Scalp 2 sens']},{m:'Monthly range',w:'Weekly bullish',d:'Daily bullish',bias:'Neutre/Prudent — Monthly neutre = conviction reduite',wrong:['Bullish agressif','Bearish','Normal']}]; const c=s[Math.floor(Math.random()*s.length)]; const opts=[c.bias,...c.wrong].sort(()=>Math.random()-0.5); return{q:`HTF : ${c.m}. ${c.w}. ${c.d}. Bias ?`,options:opts,correct:opts.indexOf(c.bias),explanation:`${c.bias}. Le HTF le plus eleve domine.`}; } },
+  { id: 'tpl_pattern_id', concept: 'turtle_soup', branch: 'patterns', minRank: 1, generate: () => { const p=[{desc:'Prix purge un low cle, reverse immediatement et agressivement.',name:'Turtle Soup',wrong:['Double Purge','Butterfly','OB']},{desc:'Prix purge high puis low, corps revenu inside.',name:'Double Purge',wrong:['Turtle Soup','OB','Banana CRT']},{desc:'Derniere bougie rouge avant displacement haussier massif.',name:'Order Block',wrong:['Breaker','FVG','Turtle Soup']}]; const c=p[Math.floor(Math.random()*p.length)]; const opts=[c.name,...c.wrong].sort(()=>Math.random()-0.5); return{q:`PATTERN : ${c.desc} Quel pattern ?`,options:opts,correct:opts.indexOf(c.name),explanation:`C'est un ${c.name}.`}; } },
+  { id: 'tpl_market_profile', concept: 'market_profile', branch: 'ltf', minRank: 2, generate: () => { const p=[{desc:'Prix oscille entre 2 niveaux depuis 6h.',profile:'Range',wrong:['Expansion','Reversal','Retracement']},{desc:'Gros corps, close au-dela du key level.',profile:'Expansion',wrong:['Range','Manipulation','Retracement']},{desc:'Apres un high, chute brusque.',profile:'Reversal',wrong:['Expansion','Range','Continuation']}]; const c=p[Math.floor(Math.random()*p.length)]; const opts=[c.profile,...c.wrong].sort(()=>Math.random()-0.5); return{q:`MARKET PROFILE : ${c.desc}`,options:opts,correct:opts.indexOf(c.profile),explanation:`Profil ${c.profile}.`}; } },
+  { id: 'tpl_emotional', concept: 'patience', branch: 'psychology', minRank: 0, generate: () => { const s=[{sit:'2 pertes. Frustre.',correct:'STOP. Fermer les charts.',wrong:['Doubler le risk','Trader un B','Continuer']},{sit:'4 wins. Invincible.',correct:'ATTENTION. Garder les memes regles.',wrong:['Augmenter le risk','Prendre des C','Trader plus']},{sit:'5 jours sans trade.',correct:'EXCELLENT. 0 perte = capital intact.',wrong:['Baisser les standards','Chercher sur 5min','Changer de marche']}]; const c=s[Math.floor(Math.random()*s.length)]; const opts=[c.correct,...c.wrong].sort(()=>Math.random()-0.5); return{q:`SITUATION : ${c.sit} Reaction ?`,options:opts,correct:opts.indexOf(c.correct),explanation:`${c.correct}`}; } },
+  { id: 'tpl_trade_checker', concept: 'rr_21', branch: 'risk', minRank: 2, generate: () => { const p=[{desc:'EURUSD Long, Weekly bearish, RR 2.5:1',issue:'HTF bearish = pas de long',opt:['RR insuffisant','HTF bearish = pas de long','SL mal place','Timing mauvais'],c:1},{desc:'GBPUSD Short, RR 1.8:1, HTF bearish',issue:'RR < 2:1 = PASS',opt:['Setup valide','RR < 2:1 = PASS','Timing mauvais','Il manque la SMT'],c:1}]; const pr=p[Math.floor(Math.random()*p.length)]; return{q:`DIAGNOSTIC : ${pr.desc}. Probleme ?`,options:pr.opt,correct:pr.c,explanation:pr.issue}; } },
+  { id: 'tpl_discipline_check', concept: 'discipline', branch: 'psychology', minRank: 1, generate: () => { const d=[{rule:'Pas de trade avant FOMC.',tempt:'A+ 4h avant FOMC.',correct:'PASS. La regle est la regle.',wrong:['Entrer — A+','Entrer 0.10%','Attendre 2h']},{rule:'RR minimum 2:1.',tempt:'Setup A, RR 1.9:1.',correct:'PASS. 1.9 < 2.',wrong:['Entrer — assez proche','Risk reduit','Ajuster le TP']}]; const c=d[Math.floor(Math.random()*d.length)]; const opts=[c.correct,...c.wrong].sort(()=>Math.random()-0.5); return{q:`DISCIPLINE : ${c.rule} ${c.tempt}`,options:opts,correct:opts.indexOf(c.correct),explanation:`${c.correct}`}; } },
+];
+
+// ============================================================
+// QUIZ DATABASE — Fixed questions (compact)
+// ============================================================
+
+const QUIZ_DB = [
+  { id:'q1', concept:'htf_trend', branch:'htf', rank:'iron', q:'PREMIERE chose avant tout trade ?', options:['Setup 5min','HTF narrative','News du jour','PnL'], correct:1, explanation:'HTF FIRST. Toujours.' },
+  { id:'q2', concept:'crt', branch:'htf', rank:'iron', q:'CRT signifie ?', options:['Candle Range Theory','Cross Resistance Trend','Chart Reversal','Crypto Rate'], correct:0, explanation:'CRT = Candle Range Theory.' },
+  { id:'q3', concept:'quarterly', branch:'htf', rank:'bronze', q:'Trimestres haute probabilite ?', options:['Q1-Q4','Q2-Q3','Q1-Q2','Q3-Q4'], correct:1, explanation:'Q2-Q3 = HP.' },
+  { id:'q4', concept:'time_price', branch:'htf', rank:'iron', q:'Plus important ?', options:['Prix','Temps','Volume','Indicateurs'], correct:1, explanation:'TEMPS > PRIX.' },
+  { id:'q11', concept:'dol', branch:'ltf', rank:'iron', q:'Attendre OBLIGATOIREMENT ?', options:['Signal RSI','Revisit DOL','Cloture US','Tweet'], correct:1, explanation:'Attendre la DOL.' },
+  { id:'q14', concept:'order_flow', branch:'ltf', rank:'bronze', q:'Manipulation vs Expansion ?', options:['Volume','Manipulation=wick sans close, Expansion=algo confirme','News','Aucune diff'], correct:1, explanation:'Manipulation=trap, Expansion=confirmation.' },
+  { id:'q20', concept:'model1', branch:'entries', rank:'bronze', q:'5 elements Model 1 ?', options:['RSI,MACD...','HTF,Candle Choice,Trade Pick,Key Level,CRT','News,Volume...','Trend,Momentum...'], correct:1, explanation:'Les 5 elements obligatoires.' },
+  { id:'q30', concept:'turtle_soup', branch:'patterns', rank:'iron', q:'Turtle Soup ?', options:['Trade GBP/JPY','Purge+reversal immediat','Breakout','Continuation'], correct:1, explanation:'TS = purge + reversal immediat.' },
+  { id:'q40', concept:'rr_21', branch:'risk', rank:'iron', q:'RR minimum ?', options:['1:1','1.5:1','2:1','3:1'], correct:2, explanation:'RR minimum 2:1.' },
+  { id:'q41', concept:'sl_placement', branch:'risk', rank:'iron', q:'Ou placer le SL ?', options:['Milieu manipulation','Au-DELA manipulation','Entry -10 pips','Pas de SL'], correct:1, explanation:'SL au-DELA de la manipulation.' },
+  { id:'q42', concept:'position_sizing', branch:'risk', rank:'iron', q:'Risk max debutant ?', options:['5%','2%','0.10-0.30%','10%'], correct:2, explanation:'Debutant : 0.10-0.30%.' },
+  { id:'q50', concept:'patience', branch:'psychology', rank:'iron', q:'Regle #1 trading ?', options:['Gagner max','Preserver capital','Avoir raison','Trader chaque jour'], correct:1, explanation:'Preserver le capital.' },
+  { id:'q51', concept:'fomo', branch:'psychology', rank:'bronze', q:'Rate un setup parfait. Action ?', options:['Entrer tard','Doubler risk','Attendre prochain A+','Changer paire'], correct:2, explanation:'Pas de FOMO.' },
+  { id:'tf1', concept:'htf_trend', branch:'htf', rank:'gold', q:'PIEGE : Daily bullish 5 jours, Weekly bearish. Direction ?', options:['Long','SHORT — Weekly prime','Neutre','Long petit risk'], correct:1, explanation:'HTF > LTF.' },
+  { id:'tf2', concept:'rr_21', branch:'risk', rank:'silver', q:'PIEGE : RR 1.9:1. Entrer ?', options:['Oui proche','NON. 2:1 min.','Si A+','Ca depend'], correct:1, explanation:'1.9 < 2 = PASS.' },
+  // LTF Execution — 20 questions
+  { id:'ltf1', concept:'mss_ote', branch:'ltf', rank:'bronze', q:'Qu\'est-ce qu\'un MSS sur le LTF ?', options:['Changement de tendance Monthly','Cassure du dernier swing high/low en corps qui invalide la structure','Croisement de moyennes mobiles','Un gap sur le chart'], correct:1, explanation:'MSS = le corps casse le dernier swing oppose. Signal de changement de pouvoir.' },
+  { id:'ltf2', concept:'mss_ote', branch:'ltf', rank:'bronze', q:'Pour valider un MSS, qu\'est-ce qui doit casser le swing precedent ?', options:['La meche','Le corps de la bougie','Le volume','La taille totale corps + meche'], correct:1, explanation:'Seul le CORPS valide un MSS. Une meche = manipulation, pas confirmation.' },
+  { id:'ltf3', concept:'market_profile', branch:'ltf', rank:'silver', q:'CRT Daily identifie. Sur quel TF descends-tu pour l\'entree ?', options:['M1','1H ou 2H','4H','Weekly'], correct:1, explanation:'CRT Daily -> entree en 1H/2H selon le tableau d\'alignement TF.' },
+  { id:'ltf4', concept:'market_profile', branch:'ltf', rank:'silver', q:'CRT sur le 4H. Quel LTF pour l\'entree ?', options:['1H','15 minutes','5 minutes','1 minute'], correct:1, explanation:'CRT 4H -> entree M15. Standard du systeme.' },
+  { id:'ltf5', concept:'fvg', branch:'ltf', rank:'silver', q:'Apres un MSS en M15, tu identifies un FVG. Ou places-tu l\'entree ?', options:['Au milieu du FVG','Sur le retest du FVG quand le prix revient le combler','Immediatement apres le MSS','Sur la cloture de la bougie suivante'], correct:1, explanation:'Le FVG post-MSS est la zone d\'entree ideale. On attend le retest.' },
+  { id:'ltf6', concept:'fvg', branch:'ltf', rank:'gold', q:'Difference entre Order Block et FVG pour l\'entree LTF ?', options:['Aucune, c\'est la meme chose','OB = derniere bougie opposee avant MSS, FVG = gap cree pendant le move','OB plus fiable que FVG','FVG est un indicateur, OB un pattern'], correct:1, explanation:'OB = structurel (derniere bougie opposee). FVG = desequilibre (gap 3 bougies). Deux zones d\'entree valides.' },
+  { id:'ltf7', concept:'sl_placement', branch:'ltf', rank:'bronze', q:'Entree long via Modele 1 sur M15. Ou placer le SL ?', options:['10 pips sous l\'entree','Sous l\'OB qui a cree le Turtle Soup','Au milieu du range CRT','Au low du jour'], correct:1, explanation:'SL sous la structure qui a valide l\'entree \u2014 l\'OB du TS.' },
+  { id:'ltf8', concept:'model1', branch:'ltf', rank:'gold', q:'OB du TS identifie. Le prix revient mais le corps ne ferme PAS au-dessus. Que fais-tu ?', options:['Entrer quand meme','Attendre. Pas de validation corps = pas d\'entree','Entrer avec SL plus large','Abandonner et changer de paire'], correct:1, explanation:'Le Modele 1 exige la fermeture du CORPS au-dela de l\'OB. Sans ca, pas d\'entree.' },
+  { id:'ltf9', concept:'calendar', branch:'ltf', rank:'gold', q:'CRT 4H Forex a 5PM NY. Quand attendre la purge ?', options:['6PM NY','3AM, 1AM ou 5AM NY','10AM NY','N\'importe quand dans les 24h'], correct:1, explanation:'CRT Forex 5PM -> purge a 3AM/1AM/5AM NY selon le protocole Model 2.' },
+  { id:'ltf10', concept:'order_flow', branch:'ltf', rank:'gold', q:'CRT Daily bearish, high purge. En M15, quels elements pour confirmer l\'entree short ?', options:['RSI surachat + divergence MACD','MSS bearish M15 + FVG + horaire Killzone','3 bougies rouges consecutives','Break du low du jour'], correct:1, explanation:'MSS confirme la structure, FVG donne la zone, Killzone valide le timing. Les 3 facteurs HP.' },
+  { id:'ltf11', concept:'model1', branch:'ltf', rank:'silver', q:'CRT H4, bougie 2 en cours. En tant que trader safe, tu fais quoi ?', options:['Suivre les avances \u2014 entrer maintenant','Attendre la fermeture bougie 2, chercher entree bougie 3 via Modele 1','Pending order au 50% du range','Entrer au market immediatement'], correct:1, explanation:'Bougie 2 close -> identifier OB du TS -> validation corps -> entree. Plus safe.' },
+  { id:'ltf12', concept:'rr_21', branch:'ltf', rank:'iron', q:'Le prix atteint 50% du range CRT. Que fais-tu ?', options:['Rien \u2014 laisser courir','Prendre un partiel. C\'est OBLIGATOIRE','Fermer tout','Resserrer le SL au BE'], correct:1, explanation:'Partiel a 50% du Range = OBLIGATOIRE. Non negociable. Minimum 20% de la position.' },
+  { id:'ltf13', concept:'smt', branch:'ltf', rank:'gold', q:'Short GBPUSD en M15. EURUSD fait un new low mais GBPUSD fait un Higher Low. C\'est :', options:['SMT bullish sur GU \u2014 attention a ton short','Rien \u2014 paires independantes','Continue le short \u2014 EU confirme','Ferme tout et passe long'], correct:0, explanation:'EU LL + GU HL = divergence haussiere (SMT). GU montre de la force. Attention au short.' },
+  { id:'ltf14', concept:'order_flow', branch:'ltf', rank:'silver', q:'M15 : bougie avec long wick au-dessus du swing high puis ferme en dessous. C\'est :', options:['Validation bullish','Manipulation (Turtle Soup potentiel)','Signal neutre','FVG'], correct:1, explanation:'Wick au-dessus = purge. Corps ferme en dessous = rejection. Potentiel TS.' },
+  { id:'ltf15', concept:'position_sizing', branch:'ltf', rank:'silver', q:'Setup A+ M15, SL 8 pips, TP 25 pips. Capital 10K EUR, risk 0.5%. Taille de position ?', options:['50 EUR risque / 8 pips = 6.25 lots','50 EUR risque, taille ajustee a la valeur du pip','1 lot standard','On ne trade pas M15 avec 10K'], correct:1, explanation:'Risk = 10K * 0.005 = 50 EUR. Taille = 50 / (8 * pip_value). Varie selon la paire.' },
+  { id:'ltf16', concept:'calendar', branch:'ltf', rank:'gold', q:'CRT H4 identifie, Modele 1 valide, MSS M15 confirme. Vendredi 15h NY, NFP lundi. Tu entres ?', options:['Oui \u2014 setup A+','Non \u2014 vendredi PM + news lundi = pas de trade','Oui avec SL large','Oui moitie du risque'], correct:1, explanation:'Vendredi PM + NFP lundi = contexte defavorable. Le setup sera peut-etre la mardi.' },
+  { id:'ltf17', concept:'dol', branch:'ltf', rank:'silver', q:'Rate l\'entree initiale sur FVG M15. Le prix continue sans toi. Que fais-tu ?', options:['Entrer au market maintenant','Attendre un retest du FVG ou OB. S\'il ne revient pas, passer','Monter en TF pour trouver une entree','Prendre le trade avec TP reduit'], correct:1, explanation:'Soit le prix revient tester, soit tu acceptes le miss. Ne pas forcer.' },
+  { id:'ltf18', concept:'mss_ote', branch:'ltf', rank:'gold', q:'Difference entre BOS et MSS ?', options:['C\'est la meme chose','BOS = continuation (HH ou LL dans le trend). MSS = changement (casse swing oppose)','MSS plus fiable que BOS','BOS en HTF, MSS en LTF'], correct:1, explanation:'BOS bullish = nouveau HH. MSS = casse un HL dans un trend bullish = signal reversal.' },
+  { id:'ltf19', concept:'model1', branch:'ltf', rank:'gold', q:'Remets dans l\'ordre le Modele 1 :', options:['MSS -> OB -> validation -> entrer','TS du key level -> identifier OB du TS -> corps ferme au-dela -> entrer','Identifier OB -> attendre TS -> entrer','MSS -> entrer sur FVG'], correct:1, explanation:'TS = trigger, OB = zone, validation corps = confirmation, entree = action.' },
+  { id:'ltf20', concept:'patience', branch:'ltf', rank:'platinum', q:'MSS M15 confirme, entre long sur FVG. 3 bougies : pas d\'expansion. Prix entre entree et SL.', options:['Fermer \u2014 pas d\'expansion = mort','Laisser ouvert tant que SL pas touche. L\'expansion peut prendre du temps','Ajouter une position \u2014 double down','Deplacer SL plus pres'], correct:1, explanation:'Tant que SL intact, trade valide. Ne pas micro-manager. Waiting (2) = attendre TP ou SL.' },
+  // Killzones — 10 questions
+  { id:'kz1', concept:'calendar', branch:'risk', rank:'silver', q:'Horaires de CRT 4H pour les INDICES ?', options:['2PM, 6PM, 10PM NY','5PM, 9PM, 5AM NY','Minuit, 6AM, Midi NY','8AM, 12PM, 4PM NY'], correct:0, explanation:'2PM, 6PM, 10PM NY = les 3 fenetres CRT 4H des indices.' },
+  { id:'kz2', concept:'calendar', branch:'risk', rank:'silver', q:'Horaires de PURGE Forex avec CRT 5PM NY ?', options:['3AM NY','10AM NY','5PM NY','Minuit NY'], correct:0, explanation:'CRT Forex 5PM -> purge a 3AM NY.' },
+  { id:'kz3', concept:'calendar', branch:'risk', rank:'bronze', q:'Pourquoi London est plus HP que les autres sessions ?', options:['Plus de volume','C\'est pendant London que la majorite des expansions et manipulations se produisent','Spreads plus bas','Banques centrales actives'], correct:1, explanation:'London = transition session, algo actif, liquidite prise.' },
+  { id:'kz4', concept:'calendar', branch:'risk', rank:'silver', q:'Horaires de purge HP communs Forex ET Indices ?', options:['Il n\'y en a pas','1AM-4AM et 8AM-11AM NY','6AM-8AM uniquement','Toute la session NY'], correct:1, explanation:'1AM-4AM et 8AM-11AM NY = fenetres generales HP.' },
+  { id:'kz5', concept:'calendar', branch:'risk', rank:'gold', q:'Turtle Soup a 3PM NY sur Forex. Horaire HP ?', options:['Oui \u2014 tout horaire NY est HP','Non \u2014 3PM hors des fenetres HP','Oui \u2014 pendant la session NY','Ca depend de l\'asset'], correct:1, explanation:'3PM hors des horaires optimaux (1-4AM, 8-11AM). Setup perd un point Model 2.' },
+  { id:'kz6', concept:'calendar', branch:'risk', rank:'silver', q:'Quel jour le plus HP pour un CRT Daily ?', options:['Lundi \u2014 Monday Range','Mercredi \u2014 mid-week reversal','Vendredi \u2014 fin de semaine','Ca n\'a pas d\'importance'], correct:0, explanation:'Monday Range = modele prefere de 700S. Lundi = CRT, Mardi/Mercredi = purge.' },
+  { id:'kz7', concept:'crt', branch:'htf', rank:'gold', q:'CRT vendredi. Lundi range A L\'INTERIEUR du CRT vendredi. Ca signifie :', options:['CRT vendredi invalide','CRT vendredi devient EXTREMEMENT HP','Attendre mardi','Range continuation \u2014 pas de trade'], correct:1, explanation:'Inside day renforce le CRT. Plus il y a de bougies fermees dans le range, plus HP.' },
+  { id:'kz8', concept:'quarterly', branch:'htf', rank:'silver', q:'Cycle mensuel : semaine des grosses expansions ?', options:['W1','W2-W3','W4','Aleatoire'], correct:1, explanation:'W1 = accumulation, W2-W3 = expansion, W4 = distribution.' },
+  { id:'kz9', concept:'calendar', branch:'risk', rank:'gold', q:'Setup Grade A pendant Killzone Asian sur Forex. Tu prends ?', options:['Oui \u2014 A = definitely take','Non \u2014 Asian n\'est pas une KZ d\'expansion. L\'horaire reduit le grade','Oui avec moins de risque','Oui si c\'est un indice'], correct:1, explanation:'Asian = range. L\'expansion ne viendra probablement pas. Setup perd la confluence timing.' },
+  { id:'kz10', concept:'quarterly', branch:'htf', rank:'bronze', q:'Trimestre historiquement le plus HP ?', options:['Q1','Q2-Q3','Q4','Tous egaux'], correct:1, explanation:'Q2-Q3 = hautes probabilites. Volume, tendances etablies, meilleure lisibilite.' },
+  // SMT — 10 questions
+  { id:'smt1', concept:'smt', branch:'ltf', rank:'bronze', q:'Qu\'est-ce qu\'une SMT ?', options:['Deux actifs correles font le meme mouvement','Deux actifs correles divergent \u2014 l\'un fait un new high/low mais pas l\'autre','Croisement de MA sur 2 actifs','Volume qui diverge du prix'], correct:1, explanation:'La divergence entre actifs correles revele le positionnement du Smart Money.' },
+  { id:'smt2', concept:'smt', branch:'ltf', rank:'silver', q:'EU fait un HH mais GU fait un LH. En HTF bullish USD :', options:['SMT bearish sur GU \u2014 short GU','SMT bullish','Pas de SMT','Signal neutre'], correct:0, explanation:'GU ne confirme pas le HH de EU = GU faiblesse. Signal short GU.' },
+  { id:'smt3', concept:'smt', branch:'ltf', rank:'iron', q:'Paires pour la SMT Forex ?', options:['EU/GU (toutes deux vs USD)','EU/USDJPY','GU/Gold','N\'importe quelles paires'], correct:0, explanation:'EU et GU correlees car cotees contre USD.' },
+  { id:'smt4', concept:'smt', branch:'ltf', rank:'iron', q:'SMT pour les Indices \u2014 quels actifs ?', options:['NQ/ES/YM','NQ/Gold','ES/DXY','NQ seulement'], correct:0, explanation:'NQ, ES, YM = 3 indices US correles.' },
+  { id:'smt5', concept:'smt', branch:'ltf', rank:'iron', q:'SMT Crypto \u2014 quels actifs ?', options:['BTC/ETH','BTC/Gold','BTC/DXY','ETH/SOL'], correct:0, explanation:'BTC et ETH correles. Divergence entre eux = SMT.' },
+  { id:'smt6', concept:'smt', branch:'ltf', rank:'silver', q:'BTC fait un new Low. ETH fait un Higher Low. C\'est :', options:['SMT bearish','SMT bullish \u2014 ETH ne confirme pas la faiblesse BTC','Normal','Attendre SOL'], correct:1, explanation:'HL ETH vs LL BTC = ETH refuse de baisser = reversal potentiel haussier.' },
+  { id:'smt7', concept:'smt', branch:'ltf', rank:'silver', q:'La SMT est un signal d\'entree ou une confluence ?', options:['Signal d\'entree','Confluence qui renforce un setup existant','Signal de sortie','Ca depend du TF'], correct:1, explanation:'SMT = bonus, pas trigger. Les 4 elements obligatoires passent avant.' },
+  { id:'smt8', concept:'smt', branch:'ltf', rank:'gold', q:'SMT bullish GU/EU en M15. Mais HTF Daily bearish. Tu prends le long ?', options:['Oui \u2014 SMT LTF prime','Non \u2014 HTF bearish prime','Oui si A+','Attendre session NY'], correct:1, explanation:'HTF FIRST. La SMT LTF ne peut pas contredire le biais HTF.' },
+  { id:'smt9', concept:'smt', branch:'ltf', rank:'silver', q:'Gold HH. Silver HH aussi. Y a-t-il une SMT ?', options:['Oui','Non \u2014 pas de divergence = pas de SMT. Confirmation de tendance','Oui \u2014 toute correlation = SMT','Verifier DXY'], correct:1, explanation:'SMT = divergence. Meme mouvement = confirmation, pas SMT.' },
+  { id:'smt10', concept:'smt', branch:'ltf', rank:'gold', q:'Quand la SMT est-elle la plus fiable ?', options:['M1','HTF (Daily, Weekly) pendant un Killzone','N\'importe quand','Uniquement vendredi'], correct:1, explanation:'SMT HTF = intentions long terme Smart Money. Combinee a KZ = timing optimal.' },
+  // Monday Range — 8 questions
+  { id:'mr1', concept:'crt', branch:'htf', rank:'bronze', q:'Qu\'est-ce que le Monday Range ?', options:['Range intraday du lundi','High et low Daily du lundi = CRT pour purge mardi/mercredi','Gap d\'ouverture lundi','Range Asian du lundi'], correct:1, explanation:'Monday Range = modele prefere de 700S, utilise semaine apres semaine.' },
+  { id:'mr2', concept:'turtle_soup', branch:'patterns', rank:'silver', q:'Monday Range: high 1.0850, low 1.0780. HTF bullish. Mardi, prix casse low a 1.0775.', options:['Breakdown \u2014 HTF bearish','TS du Monday Range \u2014 manipulation avant expansion bullish','Range continuation','Faux signal \u2014 attendre mercredi'], correct:1, explanation:'HTF bullish + sweep low Monday Range = setup classique. On attend Modele 1 long.' },
+  { id:'mr3', concept:'model2', branch:'entries', rank:'silver', q:'Monday Range identifie. Etape suivante ?', options:['Entrer mardi matin','Passer en 4H pour voir la bougie epaisse qui casse le range','Pending au 50%','Attendre vendredi'], correct:1, explanation:'Passer en 4H pour voir la bougie epaisse qui casse = Point 1 protocole Model 2.' },
+  { id:'mr4', concept:'crt', branch:'htf', rank:'gold', q:'RR du Monday Range en backtest ?', options:['1:1 en moyenne','3-8 RR regulierement','2:1 maximum','Variable impossible a estimer'], correct:1, explanation:'3.35, 5, 4.45, 5.58, 5.7, 8, 7 RR \u2014 semaine apres semaine.' },
+  { id:'mr5', concept:'model1', branch:'entries', rank:'gold', q:'Lundi inside CRT vendredi. Mardi, prix casse le high. TF d\'entree ?', options:['Daily','1H \u2014 alignement CRT Daily -> entree 1H','M1','Weekly'], correct:1, explanation:'CRT Daily (vendredi) -> purge mardi -> descente en 1H pour Modele 1.' },
+  { id:'mr6', concept:'crt', branch:'htf', rank:'silver', q:'Lundi, range tres serre (20 pips EURUSD). C\'est :', options:['Mauvais signe','Tres HP \u2014 plus de bougies inside = reaction puissante','Trop serre pour trader','Tendance laterale permanente'], correct:1, explanation:'Range serre = beaucoup de liquidite. Plus de bougies inside = plus HP.' },
+  { id:'mr7', concept:'model2', branch:'entries', rank:'gold', q:'Mardi, purge Monday Range a 3AM NY Forex. Valide protocole Model 2 ?', options:['Non \u2014 3AM pas HP','Oui \u2014 3AM NY = horaire HP purge Forex','Ca depend de l\'asset','Seulement si mercredi'], correct:1, explanation:'Forex purge a 3AM NY = Point 3 protocole valide.' },
+  { id:'mr8', concept:'grading', branch:'risk', rank:'platinum', q:'Monday Range GU. Mardi purge low 5AM NY London KZ. Bougie 4H ferme au-dessus OB. MSS 1H + FVG. Grade ?', options:['B+','A+ \u2014 Monday Range + purge KZ HP + Model 1 + MSS + FVG','A \u2014 il manque la SMT','On ne peut pas grader avant'], correct:1, explanation:'4/4 elements + protocole 4/4. Trade parfait. SMT = optionnel.' },
+  // Advanced questions with traps
+  { id:'adv1', concept:'htf_trend', branch:'htf', rank:'gold', q:'PIEGE : Daily bullish 5 jours. Weekly bearish. Direction ?', options:['Long','SHORT \u2014 Weekly prime','Neutre','Long petit risk'], correct:1, explanation:'HTF > LTF. Weekly bearish = pas de long.' },
+  { id:'adv2', concept:'rr_21', branch:'risk', rank:'silver', q:'PIEGE : RR 1.9:1. Entrer ?', options:['Oui proche de 2','NON. 2:1 minimum non-negociable','Si A+ oui','Ca depend du contexte'], correct:1, explanation:'1.9 < 2 = PASS. La regle ne change pas.' },
+  { id:'adv3', concept:'turtle_soup', branch:'patterns', rank:'gold', q:'PIEGE : Prix casse le low, gros corps bear SOUS le range. C\'est un TS ?', options:['Oui \u2014 le low est purge','NON \u2014 le corps ferme SOUS le range = vrai breakout, pas TS','Oui si le volume est fort','Attendre la bougie suivante'], correct:1, explanation:'TS = purge PUIS retour dans le range. Corps sous le range = breakout bearish.' },
+  { id:'adv4', concept:'model1', branch:'entries', rank:'platinum', q:'PIEGE : Modele 1 valide, mais la bougie est FINE (petite, pas de volume). Tu entres ?', options:['Oui \u2014 Modele 1 valide = entry','NON \u2014 bougie fine = pas de conviction. Protocole Model 2 point 1 echoue','Oui avec SL serre','Oui si HTF aligne'], correct:1, explanation:'Model 2 point 1 : bougie epaisse et puissante. Fine = pas de conviction algo.' },
+  { id:'adv5', concept:'discipline', branch:'psychology', rank:'gold', q:'PIEGE : 4 trades gagnes. Tu te sens invincible. Setup B+ apparait. Tu prends ?', options:['Oui \u2014 je suis en forme','NON \u2014 l\'euphorie abaisse les standards autant que le tilt','Oui petit risk','Oui c\'est un B+'], correct:1, explanation:'L\'euphorie est aussi dangereuse que la frustration. Standards = A+ et A uniquement.' },
+  { id:'adv6', concept:'fvg', branch:'ltf', rank:'gold', q:'PIEGE : FVG identifie sur M15, mais AUCUN MSS ne l\'a precede. Tu entres sur le FVG ?', options:['Oui \u2014 le FVG suffit','NON \u2014 sans MSS, pas de changement de structure confirme','Oui si le FVG est large','Oui avec SL serre'], correct:1, explanation:'Le FVG seul n\'est pas un trigger. Il faut le MSS pour confirmer le changement de structure.' },
+  { id:'adv7', concept:'smt', branch:'ltf', rank:'platinum', q:'PIEGE : SMT bullish HTF + CRT Daily bearish + Model 1 short valide. Que faire ?', options:['Long \u2014 SMT prime','Short \u2014 CRT + Model 1 priment sur la SMT seule','Pas de trade \u2014 conflit','Attendre la SMT LTF'], correct:1, explanation:'CRT + Model 1 = le systeme complet. La SMT est une confluence, pas un override.' },
+  { id:'adv8', concept:'calendar', branch:'risk', rank:'gold', q:'PIEGE : Setup A+ le mardi. FOMC mercredi soir. Tu entres ?', options:['Oui \u2014 A+ 24h avant c\'est ok','NON \u2014 pas de trade 1-2 jours avant FOMC','Oui SL serre','Oui si c\'est un indice'], correct:1, explanation:'FOMC -48h = pas de trade. La regle est la regle.' },
+  { id:'adv9', concept:'patience', branch:'psychology', rank:'platinum', q:'PIEGE : 2 semaines sans trade. Tu doutes de ton systeme. Quoi faire ?', options:['Baisser les standards a B','0 trade = 0 perte = capital intact. Le systeme se repete','Changer de methode','Trader sur M1 pour trouver des setups'], correct:1, explanation:'0 trade = victoire. Le systeme se repete, patience est la strategie.' },
+  { id:'adv10', concept:'model2', branch:'entries', rank:'diamond', q:'PIEGE : Protocole Model 2. Bougie epaisse OK, horaire CRT OK, horaire purge OK, mais PAS de PD Array HTF. Grade ?', options:['A+ \u2014 3/4 suffit','A \u2014 3/4 points','B \u2014 manque un element critique','C \u2014 sans HTF PDA tout est compromis'], correct:1, explanation:'3/4 points Model 2 = Grade A. Pas A+ car il manque le PD Array HTF.' },
+];
+
+// ============================================================
+// SCENARIOS
+// ============================================================
+
+const SCENARIOS_DB = [
+  { id:'scenario_1', title:'Le Turtle Soup de Londres', rank:'bronze', xpReward:40, context:'Mercredi 8h30 Paris. Weekly EURUSD bullish. Daily pullback vers OB a 1.0850.', steps:[{q:'Premiere action ?',options:['Entry 5min','Verifier HTF','Twitter','Ordre limite'],correct:1,feedback:'HTF FIRST.'},{q:'4H purge low Asian, revient dans range. C\'est quoi ?',options:['Breakout bearish','Turtle Soup','FVG','Rien'],correct:1,feedback:'TS ! Purge + retour.'},{q:'Ou placer SL ?',options:['10 pips sous entry','Au-dela meche manipulation','Swing low Daily','Pas de SL'],correct:1,feedback:'SL au-dela de la manipulation.'},{q:'RR 2.8:1, setup A. Risk ?',options:['5%','0.50%','1-3%','PASS'],correct:2,feedback:'A = max 3%.'}] },
+  { id:'scenario_2', title:'Le piege du FOMC', rank:'silver', xpReward:40, context:'Jeudi. FOMC ce soir. Setup Model 1 sur GBPUSD.', steps:[{q:'Premier element ?',options:['RR','Calendrier','Spread','Autres traders'],correct:1,feedback:'Calendrier non-negociable.'},{q:'FOMC ce soir. Beau setup. Decision ?',options:['0.10%','PASS','Couper avant','Demander avis'],correct:1,feedback:'PASS. La regle est la regle.'},{q:'Tu as passe. +150 pips dans ta direction post-FOMC.',options:['Tu notes respect de la regle','Entrer tard','Augmenter risk','Prochain fois entrer'],correct:0,feedback:'Le resultat ne change pas la qualite de la decision.'}] },
+  { id:'scenario_3', title:'Double Purge Weekly', rank:'gold', xpReward:50, context:'BTCUSD Weekly : purge high ET low. Monthly bullish 3 mois.', steps:[{q:'Ce pattern ?',options:['Turtle Soup','Double Purge','Butterfly','OTE'],correct:1,feedback:'Double Purge.'},{q:'Monthly bullish + DP weekly. Grade ?',options:['B+','A','A+','C'],correct:2,feedback:'DP + Monthly = A+.'},{q:'Comment entrer ?',options:['Lundi open','TS ou Model 1 sur Daily/4H','Buy limit low','Attendre vendredi'],correct:1,feedback:'Descendre au Daily/4H.'},{q:'RR 3.5:1, A+ confirme. Risk ?',options:['0.50%','2%','3-5%','1%'],correct:2,feedback:'A+ = 3-5% justifie.'}] },
+  { id:'scenario_4', title:'Le Revenge Trading', rank:'platinum', xpReward:50, context:'3 pertes cette semaine. Mal dormi. EURUSD monte sans toi.', steps:[{q:'Emotion et danger ?',options:['Motivation','FOMO + frustration = revenge','Rien','Colere justifiee'],correct:1,feedback:'FOMO + frustration = danger.'},{q:'"Me refaire". Setup B. Decision ?',options:['ENTRY','Double risk','FERME LES CHARTS','Risk normal'],correct:2,feedback:'REVENGE TRADING = danger #1.'},{q:'Vendredi, repose. Setup A.',options:['Risk 3%','Risk reduit 0.50-1%','Risk augmente','Pas trader vendredi'],correct:1,feedback:'En drawdown = risk REDUIT.'}] },
+];
+
+const RADIANT_CHALLENGES = [
+  { id: 'rc1', title: 'Analyse Tri-TF Complete', rank: 'diamond', xpReward: 50, description: 'On te montre Weekly, Daily, H4. Produis : narrative HTF (1 phrase), key level, grade du setup.', timeLimit: 180, type: 'analysis' },
+  { id: 'rc2', title: 'Piege ou Setup ?', rank: 'diamond', xpReward: 40, description: '5 situations. Pour chacune : vrai setup CRT ou piege ? Justification structurelle obligatoire. Min 4/5.', type: 'identification' },
+  { id: 'rc3', title: 'Protocole Model 2 Chrono', rank: 'master', xpReward: 50, description: 'On te donne un setup. Tu dois identifier les 4 points du protocole en moins de 60 secondes.', timeLimit: 60, type: 'speed' },
+  { id: 'rc4', title: 'Calendar Killer', rank: 'diamond', xpReward: 40, description: 'Semaine chargee en news. Identifie les jours NO-TRADE et les fenetres safe pour 5 paires.', type: 'planning' },
+  { id: 'rc5', title: 'Multi-Setup Compare', rank: 'master', xpReward: 50, description: '3 setups simultanes sur 3 paires. Classe-les par grade et justifie. Un seul est A+.', type: 'comparison' },
+  { id: 'rc6', title: 'Drawdown Management', rank: 'diamond', xpReward: 40, description: 'Simulation : 5 trades dont 3 pertes. A chaque etape, decide du risk, du sizing et si tu continues.', type: 'scenario' },
+  { id: 'rc7', title: 'SMT Triple Screen', rank: 'master', xpReward: 50, description: 'Charts de 3 actifs correles (EU, GU, DXY). Identifie TOUTES les SMT et leur direction.', type: 'analysis' },
+  { id: 'rc8', title: 'Monday Range Mastery', rank: 'diamond', xpReward: 40, description: 'Lundi complet : identifie le range, prevois la direction de purge, place l\'entree Model 1 sur 4H.', type: 'execution' },
+  { id: 'rc9', title: 'Psycho Endurance', rank: 'master', xpReward: 50, description: '10 scenarios psychologiques enchaines. Reponse correcte sous 10 secondes chacun. Min 8/10.', timeLimit: 100, type: 'speed' },
+  { id: 'rc10', title: 'Full Trade Plan', rank: 'radiant', xpReward: 75, description: 'Exercice ultime : produis un plan de trade complet (HTF narrative, key level, TF entree, model, risk, grade, calendrier) pour un setup donne. Chaque element est evalue.', type: 'mastery' },
+];
+
+// ============================================================
+// 30-DAY CHALLENGE
+// ============================================================
+
+const CHALLENGE_30 = [
+  { day:1, week:1, title:'Premier Pas', objectives:['Complete 5 quiz HTF','Lis la section CRT','Identifie trend Monthly 3 paires'], xp:30, category:'foundation' },
+  { day:2, week:1, title:'Le Temps d\'Abord', objectives:['10 quiz mix HTF+Risk','Key levels Weekly 3 paires','Scenario Turtle Soup'], xp:40, category:'foundation' },
+  { day:3, week:1, title:'La DOL', objectives:['10 quiz LTF','3 DOL sur Daily','Recherche DOL dans Mentor'], xp:40, category:'foundation' },
+  { day:4, week:1, title:'Defense', objectives:['10 quiz Risk','Calcule RR 5 setups','Score > 70%'], xp:50, category:'foundation' },
+  { day:5, week:1, title:'Patterns', objectives:['10 quiz Patterns','3 TS sur charts','Scenario FOMC'], xp:50, category:'foundation' },
+  { day:6, week:1, title:'Revision S1', objectives:['20 quiz mixtes','Score > 75%','1 exercice Arena'], xp:60, category:'review' },
+  { day:7, week:1, title:'Repos Actif', objectives:['Analyse HTF toutes paires','5 concepts Mentor','Streak 7 jours'], xp:30, category:'rest' },
+  { day:8, week:2, title:'Entry Models', objectives:['15 quiz Entries','3 charts Model 1','Score > 75%'], xp:60, category:'deepening' },
+  { day:9, week:2, title:'Backtest 1', objectives:['5 trades backtest','Import CSV','Analyse scores'], xp:70, category:'practice' },
+  { day:10, week:2, title:'Sessions', objectives:['15 quiz timing','Killzones 1 journee','Purge HP'], xp:60, category:'deepening' },
+  { day:11, week:2, title:'Backtest 2', objectives:['10 trades backtest','Score moyen > 55','Erreur frequente'], xp:80, category:'practice' },
+  { day:12, week:2, title:'Scenarios', objectives:['Scenario Double Purge','20 quiz mixtes','Score > 80%'], xp:70, category:'deepening' },
+  { day:13, week:2, title:'Backtest 3', objectives:['10 trades A+/A','Winrate > 50%','3 erreurs'], xp:80, category:'practice' },
+  { day:14, week:2, title:'Revision S2', objectives:['30 quiz > 80%','Skill Tree check','Streak 14 jours'], xp:70, category:'review' },
+  { day:15, week:3, title:'Qualite', objectives:['5 trades A+','Score > 70','15 quiz faibles'], xp:90, category:'precision' },
+  { day:16, week:3, title:'Psychology', objectives:['20 quiz Psycho','3 demons ecrits','Scenario Revenge'], xp:80, category:'precision' },
+  { day:17, week:3, title:'Model 2 Deep', objectives:['15 quiz Entries','5 trades Model 2','5 charts manip vs exp'], xp:100, category:'precision' },
+  { day:18, week:3, title:'Calendar', objectives:['Check calendrier','Jours NO-TRADE','Scenario FOMC Week'], xp:80, category:'precision' },
+  { day:19, week:3, title:'Simulation', objectives:['10 trades realistes','Risk max 0.50%','PnL positif'], xp:100, category:'precision' },
+  { day:20, week:3, title:'Error Elimination', objectives:['Analyse 10 backtests','Patterns erreurs','Plan correction'], xp:90, category:'precision' },
+  { day:21, week:3, title:'Revision S3', objectives:['40 quiz > 85%','3 branches 3+','Scenario NE PAS Trader'], xp:100, category:'review' },
+  { day:22, week:4, title:'Pre-Live', objectives:['50 quiz > 85%','5 trades parfaits','Plan trading complet'], xp:110, category:'transition' },
+  { day:23, week:4, title:'Paper 1', objectives:['1 trade paper','Process complet','Journal trade'], xp:120, category:'transition' },
+  { day:24, week:4, title:'Paper 2', objectives:['1-2 trades paper','Score > 70','Pas de revenge'], xp:120, category:'transition' },
+  { day:25, week:4, title:'Paper 3', objectives:['1-2 trades timing','Killzone only','RR analyse'], xp:120, category:'transition' },
+  { day:26, week:4, title:'Full Review', objectives:['Analyse 25 jours','Forces vs faiblesses','Score > 75'], xp:100, category:'transition' },
+  { day:27, week:4, title:'Perfectionnement', objectives:['2 faiblesses','20 quiz cibles','Score > 90%'], xp:110, category:'transition' },
+  { day:28, week:4, title:'Mental Prep', objectives:['Plan trading ecrit','Regles perso','10 min meditation'], xp:90, category:'transition' },
+  { day:29, week:4, title:'Graduation', objectives:['60 quiz > 90%','3 trades A+ parfaits','Branches 3+'], xp:150, category:'graduation' },
+  { day:30, week:4, title:'Day One', objectives:['Premier trade reel 0.10%','Process 100%','Tu as gagne.'], xp:200, category:'graduation' },
+];
+
+// ============================================================
+// CHART ENGINE — Canvas-based candlestick renderer
+// ============================================================
+
+const CHART_COLORS = {
+  bg: '#0B0B14',
+  grid: '#1A1A25',
+  bullish: '#10B981',
+  bearish: '#EF4444',
+  text: '#6B7280',
+  crosshair: '#D4A85380',
+  entry: '#06B6D4',
+  sl: '#EF4444',
+  tp: '#10B981',
+  ob: '#8B5CF680',
+  fvg: '#3B82F640',
+  highlight: '#D4A85340',
+};
+
+function drawCandlestickChart(ctx, candles, width, height, options = {}) {
+  const {
+    markers = [],
+    zones = [],
+    highlightCandles = [],
+    visibleCount = candles.length,
+    scrollOffset = 0,
+    showPriceAxis = true,
+    showCandleNumbers = true,
+    crosshair = null,
+    interactionMode = null,
+    zoomLabel = null,
+    animateLastCandle = false,
+    priceScaleOffset = 0,
+  } = options;
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = CHART_COLORS.bg;
+  ctx.fillRect(0, 0, width, height);
+
+  if (candles.length === 0) return;
+
+  const padding = { top: 20, bottom: showCandleNumbers ? 30 : 15, left: 10, right: showPriceAxis ? 60 : 10 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const startIdx = Math.max(0, scrollOffset);
+  const endIdx = Math.min(candles.length, startIdx + visibleCount);
+  const visible = candles.slice(startIdx, endIdx);
+
+  if (visible.length === 0) return;
+
+  let minP = Infinity, maxP = -Infinity;
+  visible.forEach(c => { minP = Math.min(minP, c.low); maxP = Math.max(maxP, c.high); });
+  markers.forEach(m => { if (m.price) { minP = Math.min(minP, m.price); maxP = Math.max(maxP, m.price); } });
+  const priceRange = maxP - minP || 1;
+  const pPad = priceRange * 0.08;
+  minP -= pPad; maxP += pPad;
+
+  // Apply price scale offset for vertical zoom
+  const scaleExpand = priceScaleOffset * 0.002;
+  const midP = (minP + maxP) / 2;
+  const halfRange = (maxP - minP) / 2;
+  minP = midP - halfRange * (1 + scaleExpand);
+  maxP = midP + halfRange * (1 + scaleExpand);
+
+  const totalRange = maxP - minP;
+
+  const priceToY = (p) => padding.top + chartH * (1 - (p - minP) / totalRange);
+  const yToPrice = (y) => minP + (1 - (y - padding.top) / chartH) * totalRange;
+  const candleW = Math.max(3, chartW / visible.length);
+  const bodyW = Math.max(2, candleW * 0.65);
+  const gap = (candleW - bodyW) / 2;
+
+  // Grid lines
+  ctx.strokeStyle = CHART_COLORS.grid;
+  ctx.lineWidth = 0.5;
+  const gridLines = 5;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = padding.top + (chartH / gridLines) * i;
+    ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(width - padding.right, y); ctx.stroke();
+    if (showPriceAxis) {
+      const price = yToPrice(y);
+      ctx.fillStyle = CHART_COLORS.text;
+      ctx.font = '10px JetBrains Mono';
+      ctx.textAlign = 'left';
+      ctx.fillText(price.toFixed(price > 100 ? 0 : 4), width - padding.right + 5, y + 3);
+    }
+  }
+
+  // Zones (OB, FVG)
+  zones.forEach(z => {
+    const y1 = priceToY(z.high);
+    const y2 = priceToY(z.low);
+    const x1 = z.startCandle !== undefined ? padding.left + (z.startCandle - startIdx) * candleW : padding.left;
+    const x2 = z.endCandle !== undefined ? padding.left + (z.endCandle - startIdx + 1) * candleW : width - padding.right;
+    ctx.fillStyle = z.type === 'ob' ? CHART_COLORS.ob : CHART_COLORS.fvg;
+    ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+    if (z.label) {
+      ctx.fillStyle = z.type === 'ob' ? '#8B5CF6' : '#3B82F6';
+      ctx.font = 'bold 9px Inter';
+      ctx.fillText(z.label, x1 + 3, y1 - 3);
+    }
+  });
+
+  // Highlight candles
+  highlightCandles.forEach(idx => {
+    const ci = idx - startIdx;
+    if (ci >= 0 && ci < visible.length) {
+      const x = padding.left + ci * candleW;
+      ctx.fillStyle = CHART_COLORS.highlight;
+      ctx.fillRect(x, padding.top, candleW, chartH);
+    }
+  });
+
+  // Candles
+  visible.forEach((c, i) => {
+    const x = padding.left + i * candleW;
+    const isBull = c.close >= c.open;
+    const color = isBull ? CHART_COLORS.bullish : CHART_COLORS.bearish;
+
+    // Wick
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    const wickX = x + candleW / 2;
+    ctx.beginPath();
+    ctx.moveTo(wickX, priceToY(c.high));
+    ctx.lineTo(wickX, priceToY(c.low));
+    ctx.stroke();
+
+    // Body
+    const bodyTop = priceToY(isBull ? c.close : c.open);
+    const bodyBot = priceToY(isBull ? c.open : c.close);
+    const bodyH = Math.max(1, bodyBot - bodyTop);
+    ctx.fillStyle = color;
+    ctx.fillRect(x + gap, bodyTop, bodyW, bodyH);
+
+    // Candle number
+    if (showCandleNumbers && (visible.length <= 40 || i % Math.ceil(visible.length / 20) === 0)) {
+      ctx.fillStyle = CHART_COLORS.text;
+      ctx.font = '9px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(startIdx + i + 1), x + candleW / 2, height - 5);
+    }
+  });
+
+  // Markers (Entry, SL, TP)
+  markers.forEach(m => {
+    const y = priceToY(m.price);
+    if (y < padding.top || y > height - padding.bottom) return;
+    ctx.setLineDash(m.type === 'entry' ? [] : [5, 3]);
+    ctx.strokeStyle = m.type === 'entry' ? CHART_COLORS.entry : m.type === 'sl' ? CHART_COLORS.sl : CHART_COLORS.tp;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(width - padding.right, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.font = 'bold 10px Inter';
+    ctx.textAlign = 'right';
+    const label = m.type === 'entry' ? 'ENTRY' : m.type === 'sl' ? 'SL' : 'TP';
+    ctx.fillText(`${label} ${m.price.toFixed(m.price > 100 ? 0 : 4)}`, width - padding.right - 5, y - 5);
+
+    // Diamond for entry
+    if (m.type === 'entry') {
+      ctx.fillStyle = CHART_COLORS.entry;
+      ctx.beginPath();
+      ctx.moveTo(padding.left + 15, y);
+      ctx.lineTo(padding.left + 20, y - 5);
+      ctx.lineTo(padding.left + 25, y);
+      ctx.lineTo(padding.left + 20, y + 5);
+      ctx.closePath();
+      ctx.fill();
+    }
+  });
+
+  // Crosshair
+  if (crosshair) {
+    ctx.strokeStyle = CHART_COLORS.crosshair;
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(crosshair.x, padding.top); ctx.lineTo(crosshair.x, height - padding.bottom); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padding.left, crosshair.y); ctx.lineTo(width - padding.right, crosshair.y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    const price = yToPrice(crosshair.y);
+    ctx.fillStyle = '#D4A85390';
+    ctx.fillRect(width - padding.right, crosshair.y - 8, padding.right, 16);
+    ctx.fillStyle = '#FFF';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(price.toFixed(price > 100 ? 0 : 4), width - padding.right + 3, crosshair.y + 3);
+  }
+
+  // PATCH 5: Zoom label
+  if (zoomLabel) {
+    ctx.fillStyle = '#D4A85360';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(zoomLabel, padding.left + 5, padding.top + 14);
+  }
+
+  return { padding, candleW, chartW, chartH, minP, maxP, totalRange, priceToY, yToPrice, startIdx, endIdx };
+}
+
+// ============================================================
+// PROCEDURAL CHART GENERATION
+// ============================================================
+
+function rnd(min, max) { return min + Math.random() * (max - min); }
+function rndInt(min, max) { return Math.floor(rnd(min, max + 1)); }
+
+function makeCandle(open, dir, vol) {
+  const bodySize = rnd(vol * 0.2, vol * 1.2);
+  const close = dir > 0 ? open + bodySize : open - bodySize;
+  const wickUp = rnd(0, vol * 0.6);
+  const wickDn = rnd(0, vol * 0.6);
+  const high = Math.max(open, close) + wickUp;
+  const low = Math.min(open, close) - wickDn;
+  return { open: +open.toFixed(5), high: +high.toFixed(5), low: +low.toFixed(5), close: +close.toFixed(5) };
+}
+
+function makeRangeCandles(start, count, vol, center) {
+  const candles = [];
+  let price = start;
+  for (let i = 0; i < count; i++) {
+    const dir = price > center ? -1 : price < center - vol ? 1 : (Math.random() > 0.5 ? 1 : -1);
+    const c = makeCandle(price, dir, vol * 0.6);
+    candles.push(c);
+    price = c.close;
+  }
+  return candles;
+}
+
+function makeTrendCandles(start, count, vol, direction) {
+  const candles = [];
+  let price = start;
+  for (let i = 0; i < count; i++) {
+    const dir = Math.random() < 0.75 ? direction : -direction;
+    const c = makeCandle(price, dir, vol);
+    candles.push(c);
+    price = c.close;
+  }
+  return candles;
+}
+
+// PATCH 2: Helper to make tight candles (no FVG gaps)
+function makeTightCandles(start, count, vol, direction) {
+  const candles = [];
+  let price = start;
+  for (let i = 0; i < count; i++) {
+    const dir = Math.random() < 0.75 ? direction : -direction;
+    const bodySize = rnd(vol * 0.2, vol * 0.8);
+    const close = dir > 0 ? price + bodySize : price - bodySize;
+    // Keep wicks small to prevent FVG gaps
+    const wickUp = rnd(0, vol * 0.15);
+    const wickDn = rnd(0, vol * 0.15);
+    const high = Math.max(price, close) + wickUp;
+    const low = Math.min(price, close) - wickDn;
+    candles.push({ open: +price.toFixed(5), high: +high.toFixed(5), low: +low.toFixed(5), close: +close.toFixed(5) });
+    price = close;
+  }
+  return candles;
+}
+
+// PATCH 2: Helper to make trend without equal highs/lows (no TS structure)
+function makeTrendNoEqualLevels(start, count, vol, direction) {
+  const candles = [];
+  let price = start;
+  let prevLow = Infinity;
+  let prevHigh = -Infinity;
+  for (let i = 0; i < count; i++) {
+    const dir = Math.random() < 0.8 ? direction : -direction;
+    const bodySize = rnd(vol * 0.3, vol * 1.0);
+    const close = dir > 0 ? price + bodySize : price - bodySize;
+    const wickUp = rnd(vol * 0.1, vol * 0.4);
+    const wickDn = rnd(vol * 0.1, vol * 0.4);
+    let high = Math.max(price, close) + wickUp;
+    let low = Math.min(price, close) - wickDn;
+    // Ensure no equal levels by adding progressive offset
+    if (direction > 0) {
+      low = low + i * vol * 0.1;
+      high = high + i * vol * 0.15;
+    } else {
+      low = low - i * vol * 0.15;
+      high = high - i * vol * 0.1;
+    }
+    candles.push({ open: +price.toFixed(5), high: +high.toFixed(5), low: +low.toFixed(5), close: +close.toFixed(5) });
+    price = close;
+  }
+  return candles;
+}
+
+// PATCH 2: Improved generators that suppress secondary patterns
+function generateTurtleSoupChart() {
+  const basePrice = rnd(1.05, 1.25);
+  const vol = rnd(0.002, 0.006);
+  const candles = [];
+
+  // Build up: slight downtrend then range with equal lows
+  // Use tight candles to avoid FVG gaps
+  candles.push(...makeTightCandles(basePrice, 3, vol, -1));
+  candles.push(...makeRangeCandles(candles[candles.length-1].close, 5, vol * 0.5, basePrice - vol));
+
+  // Create equal lows zone
+  const eqLow = Math.min(...candles.slice(3).map(c => c.low));
+
+  // Manipulation candle: purge below equal lows then close back inside
+  const manipOpen = candles[candles.length-1].close;
+  const purgeLow = eqLow - vol * 1.5;
+  const manipClose = manipOpen + vol * 0.5;
+  const manipHigh = manipOpen + vol * 0.3;
+  candles.push({ open: +manipOpen.toFixed(5), high: +manipHigh.toFixed(5), low: +purgeLow.toFixed(5), close: +manipClose.toFixed(5) });
+  const manipIdx = candles.length - 1;
+
+  // Aggressive reversal up (displacement) — use tight candles to avoid secondary FVG
+  candles.push(...makeTightCandles(manipClose, 5, vol * 1.3, 1));
+
+  // More continuation
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 4, vol * 0.8, 1));
+
+  return {
+    candles,
+    pattern: 'turtle_soup',
+    patternName: 'Turtle Soup',
+    dominantPattern: 'turtle_soup',
+    direction: 'bullish',
+    keyCandles: [manipIdx],
+    entryZone: { price: manipClose + vol * 0.3, sl: purgeLow - vol * 0.3, tp: manipClose + vol * 5 },
+    zones: [{ type: 'ob', high: manipOpen, low: purgeLow, startCandle: manipIdx, endCandle: manipIdx, label: 'Manipulation' }],
+    explanation: 'Turtle Soup: Le prix purge les equal lows (liquidite), puis reverse agressivement. Entry apres le displacement, SL sous la meche de manipulation.',
+    manipIdx,
+    askAt: manipIdx + 1,
+  };
+}
+
+function generateDoublePurgeChart() {
+  const basePrice = rnd(1.08, 1.20);
+  const vol = rnd(0.002, 0.005);
+  const candles = [];
+
+  // Range phase — make it messy so individual purges don't look like clean TS
+  candles.push(...makeRangeCandles(basePrice, 5, vol, basePrice));
+  const rangeHigh = Math.max(...candles.map(c => c.high));
+  const rangeLow = Math.min(...candles.map(c => c.low));
+
+  // Purge HIGH first — messy, not clean reversal (no TS look)
+  const purgeHighOpen = candles[candles.length-1].close;
+  const purgeHighHigh = rangeHigh + vol * 1.2;
+  const purgeHighClose = purgeHighOpen - vol * 0.1; // Small close, not aggressive reversal
+  candles.push({ open: +purgeHighOpen.toFixed(5), high: +purgeHighHigh.toFixed(5), low: +(purgeHighClose - vol * 0.2).toFixed(5), close: +purgeHighClose.toFixed(5) });
+  const purgeHighIdx = candles.length - 1;
+
+  // Messy transition (not clean, multiple candles)
+  candles.push(...makeRangeCandles(purgeHighClose, 3, vol * 0.5, (purgeHighClose + rangeLow) / 2));
+
+  // Purge LOW — also messy
+  const purgeLowOpen = candles[candles.length-1].close;
+  const purgeLowLow = rangeLow - vol * 1.2;
+  const purgeLowClose = purgeLowOpen + vol * 0.3;
+  candles.push({ open: +purgeLowOpen.toFixed(5), high: +(purgeLowClose + vol * 0.2).toFixed(5), low: +purgeLowLow.toFixed(5), close: +purgeLowClose.toFixed(5) });
+  const purgeLowIdx = candles.length - 1;
+
+  // Expansion up (bullish resolution) — tight candles
+  candles.push(...makeTightCandles(purgeLowClose, 6, vol * 1.2, 1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 0.7, 1));
+
+  return {
+    candles, pattern: 'double_purge', patternName: 'Double Purge', dominantPattern: 'double_purge', direction: 'bullish',
+    keyCandles: [purgeHighIdx, purgeLowIdx],
+    entryZone: { price: purgeLowClose + vol * 0.4, sl: purgeLowLow - vol * 0.3, tp: purgeHighHigh + vol * 2 },
+    zones: [
+      { type: 'fvg', high: rangeHigh, low: rangeLow, startCandle: 0, endCandle: candles.length - 1, label: 'Range' },
+    ],
+    explanation: 'Double Purge: Le prix purge le HIGH puis le LOW du range. Les deux DOL sont prises = haute probabilite de reversal bullish.',
+    manipIdx: purgeLowIdx,
+    askAt: purgeLowIdx + 1,
+  };
+}
+
+function generateCRTChart(valid = true) {
+  const basePrice = rnd(1.06, 1.22);
+  const vol = rnd(0.003, 0.006);
+  const candles = [];
+  const isBullish = Math.random() > 0.5;
+
+  // Pre-context
+  candles.push(...makeRangeCandles(basePrice, 4, vol, basePrice));
+
+  if (valid) {
+    if (isBullish) {
+      const o = candles[candles.length-1].close;
+      candles.push(makeCandle(o, -1, vol * 0.8));
+      candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 1.2, 1));
+      const lastP = candles[candles.length-1].close;
+      candles.push(makeCandle(lastP, 1, vol * 0.5));
+    } else {
+      const o = candles[candles.length-1].close;
+      candles.push(makeCandle(o, 1, vol * 0.8));
+      candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 1.2, -1));
+      const lastP = candles[candles.length-1].close;
+      candles.push(makeCandle(lastP, -1, vol * 0.5));
+    }
+  } else {
+    candles.push(...makeRangeCandles(candles[candles.length-1].close, 5, vol * 1.2, basePrice));
+  }
+
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 4, vol * 0.8, isBullish ? 1 : -1));
+
+  const crtStart = 4;
+  return {
+    candles,
+    pattern: valid ? 'crt' : 'invalid_crt',
+    patternName: valid ? `CRT ${isBullish ? 'Bullish (OLHC)' : 'Bearish (OHLC)'}` : 'CRT Invalide',
+    dominantPattern: valid ? 'crt' : 'invalid_crt',
+    direction: isBullish ? 'bullish' : 'bearish',
+    keyCandles: [crtStart, crtStart + 1, crtStart + 2],
+    entryZone: valid ? { price: candles[crtStart + 2]?.close || basePrice, sl: isBullish ? candles[crtStart]?.low - vol * 0.3 : candles[crtStart]?.high + vol * 0.3, tp: isBullish ? candles[crtStart + 2]?.close + vol * 4 : candles[crtStart + 2]?.close - vol * 4 } : null,
+    zones: [],
+    explanation: valid ? `CRT valide ${isBullish ? 'bullish (OLHC)' : 'bearish (OHLC)'}. La sequence Open > ${isBullish ? 'Low > High > Close' : 'High > Low > Close'} est respectee.` : 'CRT invalide. La sequence OHLC/OLHC n\'est pas respectee. PASS.',
+    valid,
+    askAt: 6,
+  };
+}
+
+function generateMSSChart() {
+  const basePrice = rnd(1.08, 1.18);
+  const vol = rnd(0.002, 0.005);
+  const candles = [];
+
+  // Downtrend (creating lower highs, lower lows) — no equal levels
+  candles.push(...makeTrendNoEqualLevels(basePrice, 6, vol, -1));
+
+  // MSS: break above last lower high
+  const lastHigh = Math.max(...candles.slice(-3).map(c => c.high));
+  const mssOpen = candles[candles.length-1].close;
+  const mssClose = lastHigh + vol * 1.5;
+  candles.push({ open: +mssOpen.toFixed(5), high: +(mssClose + vol * 0.3).toFixed(5), low: +(mssOpen - vol * 0.2).toFixed(5), close: +mssClose.toFixed(5) });
+  const mssIdx = candles.length - 1;
+
+  // Retracement to OTE (50% of the MSS move)
+  const midPoint = (mssOpen + mssClose) / 2;
+  candles.push(makeCandle(mssClose, -1, vol * 0.6));
+  candles.push({ open: +candles[candles.length-1].close.toFixed(5), high: +(candles[candles.length-1].close + vol * 0.2).toFixed(5), low: +midPoint.toFixed(5), close: +(midPoint + vol * 0.3).toFixed(5) });
+  const oteIdx = candles.length - 1;
+
+  // Expansion up — tight candles
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 5, vol * 1.3, 1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 0.8, 1));
+
+  return {
+    candles, pattern: 'mss_ote', patternName: 'MSS + OTE', dominantPattern: 'mss_ote', direction: 'bullish',
+    keyCandles: [mssIdx, oteIdx],
+    entryZone: { price: midPoint + vol * 0.3, sl: midPoint - vol * 1.5, tp: mssClose + vol * 5 },
+    zones: [
+      { type: 'fvg', high: mssClose, low: mssOpen, startCandle: mssIdx, endCandle: mssIdx, label: 'MSS' },
+      { type: 'ob', high: midPoint + vol * 0.5, low: midPoint - vol * 0.5, startCandle: oteIdx, endCandle: oteIdx, label: 'OTE Zone' },
+    ],
+    explanation: 'MSS + OTE: Le prix casse la structure (MSS = break du dernier lower high), puis retrace a 50% (OTE). Double validation = entree la plus safe.',
+    manipIdx: mssIdx,
+    askAt: oteIdx,
+  };
+}
+
+function generateManipulationTrap() {
+  const basePrice = rnd(1.08, 1.18);
+  const vol = rnd(0.002, 0.005);
+  const candles = [];
+
+  candles.push(...makeRangeCandles(basePrice, 5, vol, basePrice));
+  const rangeLow = Math.min(...candles.map(c => c.low));
+
+  // Fake purge: breaks below but closes below too (breakout, not TS)
+  const fakeOpen = candles[candles.length-1].close;
+  const fakeLow = rangeLow - vol * 2;
+  const fakeClose = rangeLow - vol * 0.8;
+  candles.push({ open: +fakeOpen.toFixed(5), high: +(fakeOpen + vol * 0.2).toFixed(5), low: +fakeLow.toFixed(5), close: +fakeClose.toFixed(5) });
+  const trapIdx = candles.length - 1;
+
+  candles.push(makeCandle(fakeClose, 1, vol * 0.4));
+  candles.push(makeCandle(candles[candles.length-1].close, 1, vol * 0.3));
+
+  candles.push(...makeTrendCandles(candles[candles.length-1].close, 6, vol * 1.1, -1));
+
+  return {
+    candles, pattern: 'manipulation_trap', patternName: 'Piege (Faux Turtle Soup)', dominantPattern: 'manipulation_trap', direction: 'bearish',
+    keyCandles: [trapIdx],
+    entryZone: null,
+    zones: [{ type: 'ob', high: fakeOpen, low: fakeLow, startCandle: trapIdx, endCandle: trapIdx, label: 'PIEGE' }],
+    explanation: 'PIEGE: Ca ressemble a un Turtle Soup mais le prix CLOSE en-dessous du range. C\'est un vrai breakout bearish, pas un TS. Entrer long ici = se faire pieger. La discipline dit PASS.',
+    isTrap: true,
+    askAt: trapIdx + 2,
+  };
+}
+
+function generateFVGChart() {
+  const basePrice = rnd(1.08, 1.18);
+  const vol = rnd(0.003, 0.006);
+  const candles = [];
+
+  // PATCH 2: Use trend without equal levels (no TS structure)
+  candles.push(...makeTrendNoEqualLevels(basePrice, 4, vol * 0.5, 1));
+
+  // Create FVG: 3 candles where wick1 doesn't touch wick3
+  const fvgOpen = candles[candles.length-1].close;
+  const c1 = makeCandle(fvgOpen, 1, vol * 0.5);
+  candles.push(c1);
+  // Big displacement candle — creates the gap
+  const c2 = { open: +c1.close.toFixed(5), high: +(c1.close + vol * 3).toFixed(5), low: +(c1.close - vol * 0.1).toFixed(5), close: +(c1.close + vol * 2.5).toFixed(5) };
+  candles.push(c2);
+  // C3 opens above c1 high with gap
+  const c3Open = c2.close - vol * 0.3;
+  const c3 = makeCandle(c3Open, 1, vol * 0.6);
+  candles.push(c3);
+  const fvgIdx = candles.length - 2;
+
+  // Continuation then retrace — tight to avoid secondary patterns
+  candles.push(...makeTightCandles(c3.close, 3, vol * 0.5, 1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 0.6, -1));
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 4, vol * 0.8, 1));
+
+  return {
+    candles, pattern: 'fvg', patternName: 'Fair Value Gap (FVG)', dominantPattern: 'fvg', direction: 'bullish',
+    keyCandles: [fvgIdx - 1, fvgIdx, fvgIdx + 1],
+    entryZone: { price: (c1.high + c3.low) / 2, sl: c1.high - vol, tp: c2.high + vol * 2 },
+    zones: [{ type: 'fvg', high: c3.low, low: c1.high, startCandle: fvgIdx - 1, endCandle: fvgIdx + 1, label: 'FVG' }],
+    explanation: 'FVG bullish: Ecart entre meche haute de la bougie 1 et meche basse de la bougie 3. Le prix revient souvent mitiger ce gap.',
+    askAt: fvgIdx + 2,
+  };
+}
+
+function generateOBChart() {
+  const basePrice = rnd(1.08, 1.18);
+  const vol = rnd(0.003, 0.006);
+  const candles = [];
+
+  // PATCH 2: Use tight candles to avoid FVG gaps
+  candles.push(...makeTightCandles(basePrice, 3, vol * 0.5, -1));
+
+  // Last bearish candle before displacement up = OB
+  const obCandle = makeCandle(candles[candles.length-1].close, -1, vol * 0.8);
+  candles.push(obCandle);
+  const obIdx = candles.length - 1;
+
+  // Displacement up — tight candles to avoid secondary FVG
+  candles.push(...makeTightCandles(obCandle.close, 4, vol * 1.5, 1));
+
+  // Retest OB — tight candles
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 3, vol * 0.7, -1));
+  // Bounce from OB
+  const bouncePrice = obCandle.high + vol * 0.2;
+  const lastC = candles[candles.length-1];
+  if (lastC.close > obCandle.open) {
+    candles.push({ open: +lastC.close.toFixed(5), high: +(lastC.close + vol * 0.1).toFixed(5), low: +bouncePrice.toFixed(5), close: +(bouncePrice + vol * 0.4).toFixed(5) });
+  } else {
+    candles.push(makeCandle(lastC.close, 1, vol * 0.8));
+  }
+
+  candles.push(...makeTightCandles(candles[candles.length-1].close, 4, vol * 1.0, 1));
+
+  return {
+    candles, pattern: 'ob', patternName: 'Order Block', dominantPattern: 'ob', direction: 'bullish',
+    keyCandles: [obIdx],
+    entryZone: { price: obCandle.high, sl: obCandle.low - vol * 0.5, tp: obCandle.high + vol * 6 },
+    zones: [{ type: 'ob', high: obCandle.open, low: obCandle.low, startCandle: obIdx, endCandle: obIdx, label: 'OB Bullish' }],
+    explanation: 'Order Block: La derniere bougie bearish avant le displacement haussier. L\'algo defend ce niveau. Entry sur le retest, SL sous l\'OB.',
+    askAt: obIdx + 3,
+  };
+}
+
+const CHART_GENERATORS = [
+  { fn: generateTurtleSoupChart, name: 'Turtle Soup', id: 'turtle_soup' },
+  { fn: generateDoublePurgeChart, name: 'Double Purge', id: 'double_purge' },
+  { fn: () => generateCRTChart(true), name: 'CRT Valide', id: 'crt' },
+  { fn: () => generateCRTChart(false), name: 'CRT Invalide', id: 'invalid_crt' },
+  { fn: generateMSSChart, name: 'MSS + OTE', id: 'mss_ote' },
+  { fn: generateManipulationTrap, name: 'Piege', id: 'manipulation_trap' },
+  { fn: generateFVGChart, name: 'FVG', id: 'fvg' },
+  { fn: generateOBChart, name: 'Order Block', id: 'ob' },
+];
+
+// PATCH 2: Pattern compatibility map — which patterns can coexist as wrong answers
+const PATTERN_CONFUSION_MAP = {
+  'turtle_soup': ['CRT', 'MSS + OTE', 'Piege / Invalide'],
+  'double_purge': ['CRT', 'Piege / Invalide', 'MSS + OTE'],
+  'crt': ['Order Block', 'Double Purge', 'Piege / Invalide'],
+  'invalid_crt': ['CRT', 'Order Block', 'Double Purge'],
+  'mss_ote': ['Turtle Soup', 'CRT', 'Double Purge'],
+  'manipulation_trap': ['Turtle Soup', 'CRT', 'Order Block'],
+  'fvg': ['Order Block', 'CRT', 'MSS + OTE'],
+  'ob': ['CRT', 'MSS + OTE', 'Double Purge'],
+};
+
+// ============================================================
+// HTF CONTEXT GENERATOR (PATCH 3)
+// ============================================================
+
+function generateHTFContext(direction) {
+  const isBullish = direction === 'bullish';
+  const monthlyBias = isBullish ? 'Bullish' : 'Bearish';
+  const weeklyCandle = isBullish
+    ? (Math.random() > 0.3 ? 'Close Above prev high' : 'Wick Above prev high, Close inside')
+    : (Math.random() > 0.3 ? 'Close Below prev low' : 'Wick Below prev low, Close inside');
+  const basePrice = rnd(1.05, 1.25);
+  const dolOffset = rnd(0.005, 0.02);
+  const dol = isBullish
+    ? (basePrice + dolOffset).toFixed(4)
+    : (basePrice - dolOffset).toFixed(4);
+  const dolPosition = isBullish ? 'above' : 'below';
+  const correctDirection = isBullish ? 'Bullish' : 'Bearish';
+
+  return {
+    monthlyBias,
+    weeklyCandle,
+    dol,
+    dolPosition,
+    correctDirection,
+    currentPrice: basePrice.toFixed(4),
+  };
+}
+
+// ============================================================
+// STATE MANAGEMENT
+// ============================================================
+
+const defaultState = () => ({
+  rank: 0, xp: 0, streak: 0, longestStreak: 0, lastActiveDate: null,
+  totalQuizAnswered: 0, totalCorrect: 0,
+  conceptScores: {}, quizHistory: [],
+  completedScenarios: {},
+  skillLevels: {},
+  challengeStartDate: null, challengeDay: 0, challengeCompleted: {},
+  dailyMissions: [], missionsDate: null,
+  trades: [],
+  dailyDrillCount: 0, dailyDrillDate: null,
+  dailyXpLog: {}, sessionsLog: [],
+  arenaStats: { replaysCompleted: 0, patternsSpotted: 0, drillsCompleted: 0, totalArenaXp: 0 },
+});
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const s = { ...defaultState(), ...JSON.parse(raw) };
+    if (!s.arenaStats) s.arenaStats = { replaysCompleted: 0, patternsSpotted: 0, drillsCompleted: 0, totalArenaXp: 0 };
+    return s;
+  } catch { return defaultState(); }
+}
+
+function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+
+function getRank(xp) { let r=0; for(let i=RANKS.length-1;i>=0;i--){if(xp>=RANKS[i].xpRequired){r=i;break;}} return r; }
+function getXpProgress(xp) { const r=getRank(xp); const cur=RANKS[r],next=RANKS[r+1]; if(!next)return{pct:100,current:xp-cur.xpRequired,needed:0}; const inR=xp-cur.xpRequired,needed=next.xpRequired-cur.xpRequired; return{pct:Math.min(100,(inR/needed)*100),current:inR,needed}; }
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+function generateDailyMissions(state) {
+  const r = getRank(state.xp);
+  const today = todayStr();
+  if (state.missionsDate === today && state.dailyMissions.length > 0) return state.dailyMissions;
+  const branches = Object.keys(SKILL_BRANCHES);
+  const weakBranches = [...branches].sort((a,b) => {
+    const aS=SKILL_BRANCHES[a].concepts.reduce((s,c)=>s+(state.skillLevels[c.id]||0),0);
+    const bS=SKILL_BRANCHES[b].concepts.reduce((s,c)=>s+(state.skillLevels[c.id]||0),0);
+    return aS-bS;
+  });
+  // PATCH 4: Cap mission XP at 30 per mission
+  const missionXp = (base) => Math.min(30, base);
+  return [
+    { id:'m1_'+today, text:`Reussis ${5+r*2} quiz ${SKILL_BRANCHES[weakBranches[0]].name}`, type:'quiz', xp:missionXp(15+r*3), completed:false, target:5+r*2, progress:0, branch:weakBranches[0] },
+    { id:'m2_'+today, text:`Enchaine ${3+r} bonnes reponses`, type:'streak_quiz', xp:missionXp(20+r*3), completed:false, target:3+r, progress:0 },
+    { id:'m3_'+today, text:`${60+r*5}% sur un set de quiz`, type:'score', xp:missionXp(20+r*3), completed:false, target:60+r*5, progress:0 },
+    { id:'m4_'+today, text:'Complete un scenario', type:'scenario', xp:missionXp(25+r*3), completed:false, target:1, progress:0 },
+    { id:'m5_'+today, text:`${15+r*5} quiz au total`, type:'total_quiz', xp:missionXp(25+r*3), completed:false, target:15+r*5, progress:0 },
+    { id:'m6_'+today, text:'Complete 1 exercice Arena', type:'arena', xp:missionXp(25+r*3), completed:false, target:1, progress:0 },
+  ];
+}
+
+function generateQuizSet(state, branch = null, count = 15) {
+  const rankIdx = getRank(state.xp);
+  const fixedCount = Math.floor(count * 0.4);
+  const generatedCount = count - fixedCount;
+  let fixedPool = QUIZ_DB.filter(q => { const qRankIdx=RANKS.findIndex(r=>r.id===q.rank); return qRankIdx<=rankIdx+1; });
+  if (branch) fixedPool = fixedPool.filter(q => q.branch === branch);
+  fixedPool.sort((a,b) => { const aS=state.conceptScores[a.concept],bS=state.conceptScores[b.concept]; return (aS?aS.correct/aS.total:0.5)-(bS?bS.correct/bS.total:0.5); });
+  const fixedQuestions = [];
+  const pPool = fixedPool.slice(0, Math.max(30, fixedPool.length));
+  while (fixedQuestions.length < Math.min(fixedCount, pPool.length)) {
+    const idx = Math.floor(Math.random() * Math.min(pPool.length, fixedCount * 3));
+    const q = pPool[idx];
+    if (q && !fixedQuestions.find(fq => fq.id === q.id)) fixedQuestions.push(q);
+  }
+  let templates = QUIZ_TEMPLATES.filter(t => t.minRank <= rankIdx + 1);
+  if (branch) templates = templates.filter(t => t.branch === branch);
+  const generated = [];
+  let attempts = 0;
+  while (generated.length < generatedCount && templates.length > 0 && attempts < generatedCount * 3) {
+    attempts++;
+    const t = templates[Math.floor(Math.random() * templates.length)];
+    try { const q=t.generate(); generated.push({...q,concept:t.concept,branch:t.branch,id:'gen_'+t.id+'_'+Date.now()+'_'+attempts,isGenerated:true}); } catch(e) {}
+  }
+  return [...fixedQuestions, ...generated].sort(() => Math.random() - 0.5);
+}
+
+// ============================================================
+// COMPONENTS
+// ============================================================
+
+function ProgressRing({radius,stroke,progress,color}) {
+  const nr=radius-stroke*2,c=nr*2*Math.PI;
+  return (<svg height={radius*2} width={radius*2}><circle stroke="#1E1E2E" fill="transparent" strokeWidth={stroke} r={nr} cx={radius} cy={radius}/><circle className="progress-ring-circle" stroke={color} fill="transparent" strokeWidth={stroke} strokeDasharray={c+' '+c} style={{strokeDashoffset:c-(progress/100)*c}} strokeLinecap="round" r={nr} cx={radius} cy={radius} transform={`rotate(-90 ${radius} ${radius})`}/></svg>);
+}
+
+function RankBadge({rankIndex,size='md'}) {
+  const rk=RANKS[rankIndex]; const sizes={sm:'w-7 h-7 text-xs',md:'w-10 h-10 text-sm',lg:'w-16 h-16 text-xl'};
+  return (<div className={`${sizes[size]} rounded-lg flex items-center justify-center font-bold`} style={{background:rk.color+'20',border:`2px solid ${rk.color}`,color:rk.color,boxShadow:`0 0 12px ${rk.color}30`}}>{rk.icon}</div>);
+}
+
+function StreakFlame({streak}) {
+  return (<div className="flex items-center gap-1"><span className="streak-flame" style={{fontSize:Math.min(20,14+streak*0.3)}}>&#128293;</span><span className="font-bold text-amber-400 text-sm">{streak}</span></div>);
+}
+
+function XPBar({xp}) {
+  const r=getRank(xp); const{pct,current,needed}=getXpProgress(xp); const next=RANKS[r+1];
+  return (<div className="w-full"><div className="flex justify-between items-center mb-1"><span className="text-xs text-gray-400">{current} XP</span>{next&&<span className="text-xs text-gray-500">{needed-current} XP pour {next.name}</span>}</div><div className="h-2.5 bg-dojo-border rounded-full overflow-hidden"><div className="h-full rounded-full transition-all duration-500" style={{width:pct+'%',background:`linear-gradient(90deg, ${RANKS[r].color}80, ${RANKS[r].color})`}}/></div></div>);
+}
+
+// ============================================================
+// CHART CANVAS COMPONENT — PATCH 1: Full interaction support
+// ============================================================
+
+function ChartCanvas({ candles, markers, zones, highlightCandles, visibleCount: propVisibleCount, crosshairEnabled, onChartClick, width: propWidth, height: propHeight, className, enableInteraction = true, animateNewCandle = false }) {
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ w: propWidth || 350, h: propHeight || 280 });
+  const [crosshair, setCrosshair] = useState(null);
+  const chartInfoRef = useRef(null);
+
+  // PATCH 1: Zoom/pan/pinch state
+  const totalCandles = (candles || []).length;
+  const [zoomLevel, setZoomLevel] = useState(1.0);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [priceScaleOffset, setPriceScaleOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPriceAxisDrag, setIsPriceAxisDrag] = useState(false);
+  const dragStartRef = useRef(null);
+  const pinchStartRef = useRef(null);
+  const lastTapRef = useRef(0);
+
+  // Compute visible count from zoom
+  const computedVisibleCount = propVisibleCount || totalCandles;
+  const zoomedVisibleCount = Math.max(5, Math.min(totalCandles, Math.round(computedVisibleCount / zoomLevel)));
+
+  // Clamp scroll offset
+  const maxScroll = Math.max(0, totalCandles - zoomedVisibleCount);
+  const clampedScroll = Math.max(0, Math.min(maxScroll, scrollOffset));
+
+  // Reset zoom when candles change significantly (new scenario)
+  const prevCandleCountRef = useRef(totalCandles);
+  useEffect(() => {
+    if (Math.abs(totalCandles - prevCandleCountRef.current) > 5) {
+      setZoomLevel(1.0);
+      setScrollOffset(0);
+      setPriceScaleOffset(0);
+    }
+    prevCandleCountRef.current = totalCandles;
+  }, [totalCandles]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(entries => {
+      const e = entries[0];
+      if (e) setDimensions({ w: e.contentRect.width, h: propHeight || Math.min(320, Math.max(220, e.contentRect.width * 0.7)) });
+    });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [propHeight]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = dimensions.w * dpr;
+    canvas.height = dimensions.h * dpr;
+    ctx.scale(dpr, dpr);
+    canvas.style.width = dimensions.w + 'px';
+    canvas.style.height = dimensions.h + 'px';
+    chartInfoRef.current = drawCandlestickChart(ctx, candles || [], dimensions.w, dimensions.h, {
+      markers: markers || [],
+      zones: zones || [],
+      highlightCandles: highlightCandles || [],
+      visibleCount: zoomedVisibleCount,
+      scrollOffset: clampedScroll,
+      crosshair,
+      zoomLabel: zoomLevel !== 1.0 ? `x${zoomLevel.toFixed(1)}` : null,
+      priceScaleOffset,
+      animateLastCandle: animateNewCandle,
+    });
+  }, [candles, markers, zones, highlightCandles, zoomedVisibleCount, clampedScroll, crosshair, dimensions, zoomLevel, priceScaleOffset]);
+
+  // Zoom with scroll wheel
+  const handleWheel = useCallback((e) => {
+    if (!enableInteraction) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    setZoomLevel(prev => {
+      const newZoom = Math.max(1.0, Math.min(10.0, prev + delta));
+      return Math.round(newZoom * 100) / 100;
+    });
+    // Adjust scroll to keep center
+    if (e.deltaY < 0) {
+      setScrollOffset(prev => Math.max(0, prev + 1));
+    }
+  }, [enableInteraction]);
+
+  // Double-click/tap to reset
+  const handleDoubleAction = useCallback(() => {
+    setZoomLevel(1.0);
+    setScrollOffset(0);
+    setPriceScaleOffset(0);
+  }, []);
+
+  // Mouse events for pan/drag
+  const handleMouseDown = useCallback((e) => {
+    if (!enableInteraction) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    // Check if clicking on price axis area (right side)
+    if (x > dimensions.w - 60) {
+      setIsPriceAxisDrag(true);
+      dragStartRef.current = { x: e.clientX, y: e.clientY, scrollOffset: clampedScroll, priceScaleOffset };
+      return;
+    }
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY, scrollOffset: clampedScroll, priceScaleOffset };
+  }, [enableInteraction, clampedScroll, priceScaleOffset, dimensions.w]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (isDragging && dragStartRef.current) {
+      const dx = e.clientX - dragStartRef.current.x;
+      const candlesPerPixel = zoomedVisibleCount / (dimensions.w - 70);
+      const scrollDelta = Math.round(-dx * candlesPerPixel * 0.5);
+      setScrollOffset(Math.max(0, Math.min(maxScroll, dragStartRef.current.scrollOffset + scrollDelta)));
+      setCrosshair(null);
+    } else if (isPriceAxisDrag && dragStartRef.current) {
+      const dy = e.clientY - dragStartRef.current.y;
+      setPriceScaleOffset(dragStartRef.current.priceScaleOffset + dy);
+    } else if (crosshairEnabled) {
+      const r = canvasRef.current.getBoundingClientRect();
+      setCrosshair({ x: e.clientX - r.left, y: e.clientY - r.top });
+    }
+  }, [isDragging, isPriceAxisDrag, crosshairEnabled, zoomedVisibleCount, dimensions.w, maxScroll]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    setIsPriceAxisDrag(false);
+    dragStartRef.current = null;
+  }, []);
+
+  const onMouseLeave = () => { setCrosshair(null); setIsDragging(false); setIsPriceAxisDrag(false); };
+
+  const onClick = (e) => {
+    if (isDragging) return;
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      handleDoubleAction();
+      lastTapRef.current = 0;
+      return;
+    }
+    lastTapRef.current = now;
+    handleInteraction(e.clientX, e.clientY);
+  };
+
+  // Touch events for pan + pinch
+  const handleTouchStart = useCallback((e) => {
+    if (!enableInteraction) return;
+    if (e.touches.length === 2) {
+      // Pinch start
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      pinchStartRef.current = { distance: d, zoomLevel };
+      e.preventDefault();
+    } else if (e.touches.length === 1) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      if (x > dimensions.w - 60) {
+        setIsPriceAxisDrag(true);
+        dragStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, scrollOffset: clampedScroll, priceScaleOffset };
+      } else {
+        setIsDragging(true);
+        dragStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, scrollOffset: clampedScroll, priceScaleOffset };
+      }
+    }
+  }, [enableInteraction, zoomLevel, clampedScroll, priceScaleOffset, dimensions.w]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (e.touches.length === 2 && pinchStartRef.current) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const scale = d / pinchStartRef.current.distance;
+      setZoomLevel(Math.max(1.0, Math.min(10.0, pinchStartRef.current.zoomLevel * scale)));
+      e.preventDefault();
+    } else if (e.touches.length === 1 && dragStartRef.current) {
+      if (isPriceAxisDrag) {
+        const dy = e.touches[0].clientY - dragStartRef.current.y;
+        setPriceScaleOffset(dragStartRef.current.priceScaleOffset + dy);
+      } else if (isDragging) {
+        const dx = e.touches[0].clientX - dragStartRef.current.x;
+        const candlesPerPixel = zoomedVisibleCount / (dimensions.w - 70);
+        const scrollDelta = Math.round(-dx * candlesPerPixel * 0.5);
+        setScrollOffset(Math.max(0, Math.min(maxScroll, dragStartRef.current.scrollOffset + scrollDelta)));
+      }
+      e.preventDefault();
+    }
+  }, [isDragging, isPriceAxisDrag, zoomedVisibleCount, dimensions.w, maxScroll]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (e.touches.length === 0) {
+      // Double-tap detection
+      if (e.changedTouches.length > 0 && !isDragging && !isPriceAxisDrag) {
+        const now = Date.now();
+        if (now - lastTapRef.current < 300) {
+          handleDoubleAction();
+          lastTapRef.current = 0;
+        } else {
+          lastTapRef.current = now;
+          const t = e.changedTouches[0];
+          handleInteraction(t.clientX, t.clientY);
+        }
+      }
+      setIsDragging(false);
+      setIsPriceAxisDrag(false);
+      pinchStartRef.current = null;
+      dragStartRef.current = null;
+    }
+    if (e.cancelable) e.preventDefault();
+  }, [isDragging, isPriceAxisDrag, handleDoubleAction]);
+
+  const handleInteraction = useCallback((clientX, clientY) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    if (crosshairEnabled) setCrosshair({ x, y });
+    if (onChartClick && chartInfoRef.current) {
+      const price = chartInfoRef.current.yToPrice(y);
+      const candleIdx = Math.floor((x - chartInfoRef.current.padding.left) / chartInfoRef.current.candleW) + chartInfoRef.current.startIdx;
+      onChartClick({ x, y, price, candleIdx });
+    }
+  }, [crosshairEnabled, onChartClick]);
+
+  // Attach wheel listener with passive: false
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !enableInteraction) return;
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', handleWheel);
+  }, [handleWheel, enableInteraction]);
+
+  return (
+    <div ref={containerRef} className={`w-full rounded-lg overflow-hidden ${className || ''}`} style={{ background: CHART_COLORS.bg }}>
+      <canvas
+        ref={canvasRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={onMouseLeave}
+        onClick={onClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ cursor: isDragging ? 'grabbing' : isPriceAxisDrag ? 'ns-resize' : crosshairEnabled ? 'crosshair' : 'grab' }}
+      />
+    </div>
+  );
+}
+
+// ============================================================
+// ARENA — TRADE REPLAY MODE
+// ============================================================
+
+function TradeReplay({ state, setState, onBack }) {
+  const [scenario, setScenario] = useState(null);
+  const [visibleCandles, setVisibleCandles] = useState(0);
+  const [phase, setPhase] = useState('intro'); // intro, building, question, placing, result, summary
+  const [question, setQuestion] = useState(null);
+  const [answers, setAnswers] = useState([]);
+  const [score, setScore] = useState(0);
+  const [totalQ, setTotalQ] = useState(0);
+  const [userMarkers, setUserMarkers] = useState([]);
+  const [placingMode, setPlacingMode] = useState(null);
+  const [flashClass, setFlashClass] = useState('');
+  const [feedback, setFeedback] = useState(null);
+  const [animateCandle, setAnimateCandle] = useState(false);
+
+  const startScenario = () => {
+    const genIdx = Math.floor(Math.random() * CHART_GENERATORS.length);
+    const gen = CHART_GENERATORS[genIdx];
+    const data = gen.fn();
+    setScenario(data);
+    setVisibleCandles(3);
+    setPhase('building');
+    setAnswers([]);
+    setScore(0);
+    setTotalQ(0);
+    setUserMarkers([]);
+    setFeedback(null);
+    setAnimateCandle(false);
+  };
+
+  const addCandle = () => {
+    if (!scenario) return;
+    const next = visibleCandles + 1;
+    // PATCH 5: Animate new candle
+    setAnimateCandle(true);
+    setVisibleCandles(next);
+    setTimeout(() => setAnimateCandle(false), 300);
+
+    if (next >= scenario.candles.length) {
+      setPhase('summary');
+      return;
+    }
+
+    if (scenario.askAt && next === scenario.askAt) {
+      askQuestion();
+    }
+  };
+
+  const askQuestion = () => {
+    const questions = [];
+
+    if (!answers.find(a => a.type === 'profile')) {
+      const profiles = ['Range', 'Expansion', 'Manipulation', 'Reversal'];
+      const correct = scenario.isTrap ? 'Manipulation' : scenario.direction === 'bullish' ? 'Reversal' : 'Reversal';
+      const opts = profiles.sort(() => Math.random() - 0.5);
+      questions.push({
+        type: 'profile',
+        text: 'Quel est le profil de marche actif ?',
+        options: opts,
+        correct: opts.indexOf(correct),
+      });
+    }
+
+    if (!answers.find(a => a.type === 'pattern')) {
+      const patterns = ['Turtle Soup', 'Double Purge', 'CRT Valide', 'MSS + OTE', 'FVG', 'Order Block', 'Piege / Invalide'];
+      const correct = scenario.isTrap ? 'Piege / Invalide' : scenario.patternName.includes('Invalide') ? 'Piege / Invalide' : patterns.find(p => scenario.patternName.includes(p)) || scenario.patternName;
+      const visible = [correct];
+      const others = patterns.filter(p => p !== correct).sort(() => Math.random() - 0.5).slice(0, 3);
+      const opts = [...visible, ...others].sort(() => Math.random() - 0.5);
+      questions.push({
+        type: 'pattern',
+        text: 'Quel pattern identifies-tu ?',
+        options: opts,
+        correct: opts.indexOf(correct),
+      });
+    }
+
+    if (!answers.find(a => a.type === 'decision')) {
+      const correct = scenario.isTrap || !scenario.valid === false || scenario.pattern === 'invalid_crt' ? 'PASS — conditions non reunies' : 'ENTRY — setup valide';
+      const opts = ['ENTRY — setup valide', 'PASS — conditions non reunies', 'Attendre plus de bougies', 'Shorter le mouvement'];
+      if (!opts.includes(correct)) opts[0] = correct;
+      const shuffled = [...opts].sort(() => Math.random() - 0.5);
+      questions.push({
+        type: 'decision',
+        text: 'Decision : Entrer, Attendre, ou Pass ?',
+        options: shuffled,
+        correct: shuffled.indexOf(correct),
+      });
+    }
+
+    if (questions.length > 0) {
+      setQuestion(questions[0]);
+      setPhase('question');
+    } else if (scenario.entryZone && !scenario.isTrap && !answers.find(a => a.type === 'placement')) {
+      setPhase('placing');
+      setPlacingMode('entry');
+      setFeedback({ text: 'Tape sur le chart pour placer ton ENTRY', color: '#06B6D4' });
+    }
+  };
+
+  const answerQuestion = (idx) => {
+    const isCorrect = idx === question.correct;
+    const newScore = score + (isCorrect ? 1 : 0);
+    setScore(newScore);
+    setTotalQ(totalQ + 1);
+    setAnswers([...answers, { type: question.type, correct: isCorrect }]);
+    setFlashClass(isCorrect ? 'flash-correct' : 'flash-wrong');
+    setTimeout(() => setFlashClass(''), 500);
+
+    // PATCH 4: Reduced XP — 3 XP per correct arena answer
+    const xpGain = isCorrect ? 3 : 0;
+    setFeedback({
+      text: isCorrect ? `Correct ! +${xpGain} XP` : `Incorrect. Reponse : ${question.options[question.correct]}`,
+      color: isCorrect ? '#10B981' : '#EF4444',
+    });
+
+    if (isCorrect) {
+      const ns = { ...state, xp: state.xp + xpGain };
+      ns.rank = getRank(ns.xp);
+      setState(ns); saveState(ns);
+    }
+
+    setTimeout(() => {
+      setQuestion(null);
+      setFeedback(null);
+      if (answers.length + 1 < 3) {
+        askQuestion();
+      } else if (scenario.entryZone && !scenario.isTrap) {
+        setPhase('placing');
+        setPlacingMode('entry');
+        setFeedback({ text: 'Tape sur le chart pour placer ton ENTRY', color: '#06B6D4' });
+      } else {
+        setPhase('building');
+      }
+    }, 1500);
+  };
+
+  const handleChartClick = ({ price }) => {
+    if (phase !== 'placing') return;
+    if (placingMode === 'entry') {
+      setUserMarkers([...userMarkers, { type: 'entry', price }]);
+      setPlacingMode('sl');
+      setFeedback({ text: 'Maintenant place ton STOP LOSS (SL)', color: '#EF4444' });
+    } else if (placingMode === 'sl') {
+      setUserMarkers([...userMarkers, { type: 'sl', price }]);
+      setPlacingMode('tp');
+      setFeedback({ text: 'Maintenant place ton TAKE PROFIT (TP)', color: '#10B981' });
+    } else if (placingMode === 'tp') {
+      const newMarkers = [...userMarkers, { type: 'tp', price }];
+      setUserMarkers(newMarkers);
+      setPlacingMode(null);
+
+      const entry = newMarkers.find(m => m.type === 'entry');
+      const sl = newMarkers.find(m => m.type === 'sl');
+      const tp = newMarkers.find(m => m.type === 'tp');
+      const ideal = scenario.entryZone;
+
+      if (entry && sl && tp && ideal) {
+        const risk = Math.abs(entry.price - sl.price);
+        const reward = Math.abs(tp.price - entry.price);
+        const rr = risk > 0 ? (reward / risk) : 0;
+        const goodRR = rr >= 1.8;
+        const goodSL = scenario.direction === 'bullish' ? sl.price < ideal.sl + Math.abs(ideal.sl - ideal.price) * 0.5 : sl.price > ideal.sl - Math.abs(ideal.sl - ideal.price) * 0.5;
+        const placementScore = (goodRR ? 1 : 0) + (goodSL ? 1 : 0);
+        const xpGain = placementScore * 3;
+
+        setFeedback({
+          text: `RR = ${rr.toFixed(1)}:1 ${goodRR ? '(OK)' : '(< 2:1 !)'}. SL ${goodSL ? 'bien place' : 'a ameliorer'}. +${xpGain} XP`,
+          color: placementScore >= 2 ? '#10B981' : placementScore >= 1 ? '#F59E0B' : '#EF4444',
+        });
+
+        setScore(score + placementScore);
+        setTotalQ(totalQ + 2);
+
+        if (xpGain > 0) {
+          const ns = { ...state, xp: state.xp + xpGain };
+          ns.rank = getRank(ns.xp);
+          setState(ns); saveState(ns);
+        }
+      }
+
+      setTimeout(() => {
+        setPhase('building');
+        setFeedback(null);
+      }, 2500);
+    }
+  };
+
+  const finishReplay = () => {
+    // PATCH 5: Arena exercise completion XP with daily cap
+    const totalXP = 20;
+    const ns = { ...state };
+    if(!ns.dailyXpLog||Array.isArray(ns.dailyXpLog))ns.dailyXpLog={};const _capRem=DAILY_XP_CAP-((ns.dailyXpLog||{})[todayStr()]||0);const _actualXp=Math.min(totalXP,Math.max(0,_capRem));ns.xp+=_actualXp;ns.dailyXpLog[todayStr()]=((ns.dailyXpLog||{})[todayStr()]||0)+_actualXp;
+    ns.arenaStats = { ...ns.arenaStats, replaysCompleted: (ns.arenaStats.replaysCompleted || 0) + 1, totalArenaXp: (ns.arenaStats.totalArenaXp || 0) + totalXP };
+    ns.rank = getRank(ns.xp);
+    if (ns.missionsDate === todayStr()) {
+      ns.dailyMissions = ns.dailyMissions.map(m => m.type === 'arena' && !m.completed ? { ...m, progress: 1, completed: true } : m);
+      ns.dailyMissions.forEach(m => { if (m.completed && !m.xpAwarded) { ns.xp += m.xp; m.xpAwarded = true; } });
+    }
+    setState(ns); saveState(ns);
+    setPhase('summary');
+  };
+
+  // INTRO SCREEN
+  if (phase === 'intro' || !scenario) {
+    return (
+      <div className="animate-fade-in">
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button>
+          <h2 className="text-xl font-bold text-white">Trade Replay</h2>
+        </div>
+        <div className="text-center py-8">
+          <span className="text-5xl block mb-4">&#128200;</span>
+          <h3 className="text-2xl font-bold text-white mb-2">Trade Replay Mode</h3>
+          <p className="text-gray-400 mb-6 max-w-sm mx-auto">Le chart se construit bougie par bougie. Identifie les patterns, prends tes decisions, place tes trades.</p>
+          <button onClick={startScenario} className="arena-btn primary px-8 py-4 rounded-xl text-amber-400 font-bold text-lg">Commencer un Replay</button>
+        </div>
+      </div>
+    );
+  }
+
+  // SUMMARY SCREEN
+  if (phase === 'summary') {
+    const pct = totalQ > 0 ? Math.round(score / totalQ * 100) : 0;
+    return (
+      <div className="animate-slide-up text-center py-8">
+        <span className="text-5xl block mb-4">{pct >= 70 ? '\u2705' : '\u274C'}</span>
+        <h3 className="text-2xl font-bold text-white mb-2">Replay Termine</h3>
+        <p className="text-gray-400 mb-1">{scenario.patternName}</p>
+        <p className="text-3xl font-bold mb-4" style={{ color: pct >= 70 ? '#10B981' : pct >= 40 ? '#F59E0B' : '#EF4444' }}>{pct}%</p>
+        <p className="text-sm text-gray-400 mb-2">{score}/{totalQ} correct</p>
+
+        <div className="dojo-card p-4 mx-auto max-w-md text-left mb-6">
+          <p className="text-xs text-amber-400 font-semibold mb-2">EXPLICATION</p>
+          <p className="text-sm text-gray-300">{scenario.explanation}</p>
+        </div>
+
+        <div className="flex gap-3 justify-center">
+          <button onClick={startScenario} className="arena-btn primary px-6 py-3 rounded-lg text-amber-400 font-medium">Nouveau Replay</button>
+          <button onClick={onBack} className="arena-btn px-6 py-3 rounded-lg text-gray-300 font-medium">Retour</button>
+        </div>
+      </div>
+    );
+  }
+
+  const displayCandles = scenario.candles.slice(0, visibleCandles);
+
+  return (
+    <div className={`animate-fade-in ${flashClass}`}>
+      <div className="flex items-center gap-3 mb-3">
+        <button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button>
+        <div className="flex-1 h-1.5 bg-dojo-border rounded-full overflow-hidden">
+          <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: (visibleCandles / scenario.candles.length * 100) + '%' }} />
+        </div>
+        <span className="text-xs text-gray-500 font-mono">{visibleCandles}/{scenario.candles.length}</span>
+      </div>
+
+      <ChartCanvas
+        candles={displayCandles}
+        markers={userMarkers}
+        zones={visibleCandles > (scenario.askAt || 999) ? scenario.zones : []}
+        highlightCandles={[]}
+        crosshairEnabled={phase === 'placing'}
+        onChartClick={handleChartClick}
+        animateNewCandle={animateCandle}
+      />
+
+      {feedback && (
+        <div className="animate-slide-up dojo-card p-3 mt-3 text-center" style={{ borderColor: feedback.color + '40' }}>
+          <p className="text-sm font-medium" style={{ color: feedback.color }}>{feedback.text}</p>
+        </div>
+      )}
+
+      {phase === 'question' && question && (
+        <div className="mt-4 animate-slide-up">
+          <div className="dojo-card p-4 mb-3">
+            <p className="text-white font-medium">{question.text}</p>
+          </div>
+          <div className="space-y-2">
+            {question.options.map((opt, i) => (
+              <div key={i} className="quiz-option dojo-card p-3 text-sm text-gray-200" onClick={() => answerQuestion(i)}>{opt}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {phase === 'building' && (
+        <div className="mt-4 flex gap-3">
+          <button onClick={addCandle} className="flex-1 arena-btn primary py-3 rounded-lg text-amber-400 font-medium">
+            Bougie suivante \u25B6
+          </button>
+          {visibleCandles >= scenario.candles.length - 2 && (
+            <button onClick={finishReplay} className="arena-btn py-3 px-4 rounded-lg text-gray-300 font-medium">Terminer</button>
+          )}
+        </div>
+      )}
+
+      {phase === 'placing' && (
+        <div className="mt-3 text-center text-xs text-gray-500">
+          Mode placement : {placingMode === 'entry' ? 'ENTRY (cyan)' : placingMode === 'sl' ? 'STOP LOSS (rouge)' : 'TAKE PROFIT (vert)'}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// ARENA — PATTERN SPOTTER MODE (PATCH 3: HTF Context)
+// ============================================================
+
+function PatternSpotter({ state, setState, onBack }) {
+  const [scenario, setScenario] = useState(null);
+  const [phase, setPhase] = useState('intro'); // intro, htf_question, identify, select_candles, place_entry, result
+  const [selectedPattern, setSelectedPattern] = useState(null);
+  const [selectedCandles, setSelectedCandles] = useState([]);
+  const [entryPrice, setEntryPrice] = useState(null);
+  const [score, setScore] = useState(0);
+  const [htfScore, setHtfScore] = useState(0);
+  const [flashClass, setFlashClass] = useState('');
+  const [htfContext, setHtfContext] = useState(null);
+  const [htfAnswered, setHtfAnswered] = useState(false);
+
+  const startScenario = () => {
+    const validGens = CHART_GENERATORS.filter(g => g.id !== 'manipulation_trap' && g.id !== 'invalid_crt');
+    const gen = validGens[Math.floor(Math.random() * validGens.length)];
+    const data = gen.fn();
+    const htf = generateHTFContext(data.direction);
+    setScenario(data);
+    setHtfContext(htf);
+    setPhase('htf_question');
+    setSelectedPattern(null);
+    setSelectedCandles([]);
+    setEntryPrice(null);
+    setScore(0);
+    setHtfScore(0);
+    setHtfAnswered(false);
+  };
+
+  const handleHTFAnswer = (answer) => {
+    setHtfAnswered(true);
+    const correct = answer === htfContext.correctDirection;
+    if (correct) setHtfScore(1);
+    setFlashClass(correct ? 'flash-correct' : 'flash-wrong');
+    // PATCH 4: Reduced XP
+    if (correct) {
+      const ns = { ...state, xp: state.xp + 3 };
+      ns.rank = getRank(ns.xp);
+      setState(ns); saveState(ns);
+    }
+    setTimeout(() => { setFlashClass(''); setPhase('identify'); }, 800);
+  };
+
+  const patternChoices = ['Turtle Soup', 'Double Purge', 'CRT Bullish', 'CRT Bearish', 'MSS + OTE', 'FVG', 'Order Block', 'Breaker Block'];
+
+  const handlePatternChoice = (pattern) => {
+    setSelectedPattern(pattern);
+    const correct = scenario.patternName.toLowerCase().includes(pattern.toLowerCase().split(' ')[0].toLowerCase()) ||
+                    (pattern === 'CRT Bullish' && scenario.pattern === 'crt' && scenario.direction === 'bullish') ||
+                    (pattern === 'CRT Bearish' && scenario.pattern === 'crt' && scenario.direction === 'bearish') ||
+                    (pattern === 'Order Block' && scenario.pattern === 'ob');
+    if (correct) {
+      setScore(score + 1);
+      setFlashClass('flash-correct');
+    } else {
+      setFlashClass('flash-wrong');
+    }
+    setTimeout(() => { setFlashClass(''); setPhase('select_candles'); }, 600);
+  };
+
+  const handleCandleClick = ({ candleIdx }) => {
+    if (phase !== 'select_candles') return;
+    if (candleIdx < 0 || candleIdx >= scenario.candles.length) return;
+    const newSel = selectedCandles.includes(candleIdx) ? selectedCandles.filter(c => c !== candleIdx) : [...selectedCandles, candleIdx];
+    setSelectedCandles(newSel);
+  };
+
+  const confirmCandles = () => {
+    const hits = selectedCandles.filter(c => scenario.keyCandles.includes(c)).length;
+    const accuracy = scenario.keyCandles.length > 0 ? hits / scenario.keyCandles.length : 0;
+    if (accuracy >= 0.5) setScore(s => s + 1);
+    setFlashClass(accuracy >= 0.5 ? 'flash-correct' : 'flash-wrong');
+    setTimeout(() => { setFlashClass(''); setPhase('place_entry'); }, 600);
+  };
+
+  const handleEntryClick = ({ price }) => {
+    if (phase !== 'place_entry') return;
+    setEntryPrice(price);
+    if (scenario.entryZone) {
+      const dist = Math.abs(price - scenario.entryZone.price);
+      const range = Math.abs(scenario.entryZone.tp - scenario.entryZone.sl);
+      const accuracy = 1 - Math.min(1, dist / (range * 0.3));
+      if (accuracy >= 0.5) setScore(s => s + 1);
+      setFlashClass(accuracy >= 0.5 ? 'flash-correct' : 'flash-wrong');
+    }
+    setTimeout(() => { setFlashClass(''); setPhase('result'); }, 600);
+  };
+
+  const finishSpotter = () => {
+    // PATCH 5: Arena exercise XP with daily cap
+    const xpGain = score * 5 + htfScore * 5 + 10;
+    const cappedXp = Math.min(25, xpGain);
+    const ns = { ...state };
+    if(!ns.dailyXpLog||Array.isArray(ns.dailyXpLog))ns.dailyXpLog={};const _capRem2=DAILY_XP_CAP-((ns.dailyXpLog||{})[todayStr()]||0);const _actualXp2=Math.min(cappedXp,Math.max(0,_capRem2));ns.xp+=_actualXp2;ns.dailyXpLog[todayStr()]=((ns.dailyXpLog||{})[todayStr()]||0)+_actualXp2;
+    ns.arenaStats = { ...ns.arenaStats, patternsSpotted: (ns.arenaStats.patternsSpotted || 0) + 1, totalArenaXp: (ns.arenaStats.totalArenaXp || 0) + cappedXp };
+    ns.rank = getRank(ns.xp);
+    if (ns.missionsDate === todayStr()) {
+      ns.dailyMissions = ns.dailyMissions.map(m => m.type === 'arena' && !m.completed ? { ...m, progress: 1, completed: true } : m);
+      ns.dailyMissions.forEach(m => { if (m.completed && !m.xpAwarded) { ns.xp += m.xp; m.xpAwarded = true; } });
+    }
+    setState(ns); saveState(ns);
+  };
+
+  if (phase === 'intro' || !scenario) {
+    return (
+      <div className="animate-fade-in">
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button>
+          <h2 className="text-xl font-bold text-white">Pattern Spotter</h2>
+        </div>
+        <div className="text-center py-8">
+          <span className="text-5xl block mb-4">&#128269;</span>
+          <h3 className="text-2xl font-bold text-white mb-2">Pattern Spotter Mode</h3>
+          <p className="text-gray-400 mb-6 max-w-sm mx-auto">Analyse le HTF, identifie le pattern, selectionne les bougies cles, place l'entree optimale.</p>
+          <button onClick={startScenario} className="arena-btn primary px-8 py-4 rounded-xl text-amber-400 font-bold text-lg">Commencer</button>
+        </div>
+      </div>
+    );
+  }
+
+  // PATCH 3: HTF Context panel (shown on all phases except intro)
+  const HTFPanel = () => htfContext ? (
+    <div className="dojo-card p-3 mb-3 border-purple-500/20">
+      <p className="text-xs text-purple-400 font-semibold mb-2">HTF CONTEXT</p>
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div>
+          <span className="text-gray-500">Monthly:</span>
+          <span className={`ml-1 font-medium ${htfContext.monthlyBias === 'Bullish' ? 'text-emerald-400' : 'text-red-400'}`}>{htfContext.monthlyBias}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Weekly:</span>
+          <span className="ml-1 text-gray-300 text-[10px]">{htfContext.weeklyCandle}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Key DOL:</span>
+          <span className="ml-1 text-amber-400 font-mono">{htfContext.dol}</span>
+          <span className="text-gray-600 text-[10px] ml-1">({htfContext.dolPosition})</span>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  // PATCH 3: HTF Question phase
+  if (phase === 'htf_question') {
+    return (
+      <div className={`animate-fade-in ${flashClass}`}>
+        <div className="flex items-center gap-3 mb-3">
+          <button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button>
+          <h2 className="text-lg font-bold text-white">Pattern Spotter</h2>
+          <div className="flex-1" />
+          <div className="flex gap-1">
+            {['htf_question', 'identify', 'select_candles', 'place_entry'].map((p, i) => (
+              <div key={p} className="w-6 h-1.5 rounded-full" style={{ background: i === 0 ? '#8B5CF6' : '#1E1E2E' }} />
+            ))}
+          </div>
+        </div>
+
+        <HTFPanel />
+
+        <div className="mt-4 animate-slide-up">
+          <div className="dojo-card p-4 mb-4 border-purple-500/20">
+            <p className="text-white font-medium mb-1">Analyse HTF</p>
+            <p className="text-sm text-gray-400">D'apres le contexte HTF ci-dessus, quelle direction privilegier ?</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {['Bullish', 'Bearish', 'Neutral', 'Pass'].map(dir => (
+              <div key={dir} className="quiz-option dojo-card p-3 text-sm text-gray-200 text-center" onClick={() => handleHTFAnswer(dir)}>
+                {dir === 'Bullish' ? '\u2191 ' : dir === 'Bearish' ? '\u2193 ' : dir === 'Neutral' ? '\u2194 ' : '\u23F8 '}{dir}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'result') {
+    finishSpotter();
+    const totalPoints = 4; // htf + pattern + candles + entry
+    const totalScore = score + htfScore;
+    const pct = Math.round(totalScore / totalPoints * 100);
+    return (
+      <div className={`animate-slide-up ${flashClass}`}>
+        <HTFPanel />
+        <ChartCanvas
+          candles={scenario.candles}
+          markers={scenario.entryZone ? [
+            { type: 'entry', price: scenario.entryZone.price },
+            { type: 'sl', price: scenario.entryZone.sl },
+            { type: 'tp', price: scenario.entryZone.tp },
+          ] : []}
+          zones={scenario.zones}
+          highlightCandles={scenario.keyCandles}
+        />
+        <div className="mt-4 text-center">
+          <p className="text-3xl font-bold mb-2" style={{ color: pct >= 70 ? '#10B981' : pct >= 40 ? '#F59E0B' : '#EF4444' }}>{pct}%</p>
+          <p className="text-gray-400 mb-1">{totalScore}/{totalPoints} correct — {scenario.patternName}</p>
+          <p className="text-xs text-purple-400 mb-2">HTF: {htfScore ? 'Correct' : 'Incorrect'}</p>
+          <div className="dojo-card p-4 text-left mb-4">
+            <p className="text-xs text-amber-400 font-semibold mb-2">CORRECTION</p>
+            <p className="text-sm text-gray-300 mb-2">{scenario.explanation}</p>
+            <p className="text-xs text-gray-500">Les bougies surlignees en or sont les bougies cles du pattern. Les lignes montrent l'entry, SL et TP optimaux.</p>
+          </div>
+          <div className="flex gap-3 justify-center">
+            <button onClick={() => { setScenario(null); setPhase('intro'); }} className="arena-btn primary px-6 py-3 rounded-lg text-amber-400 font-medium">Nouveau Pattern</button>
+            <button onClick={onBack} className="arena-btn px-6 py-3 rounded-lg text-gray-300 font-medium">Retour</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`animate-fade-in ${flashClass}`}>
+      <div className="flex items-center gap-3 mb-3">
+        <button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button>
+        <h2 className="text-lg font-bold text-white">Pattern Spotter</h2>
+        <div className="flex-1" />
+        <div className="flex gap-1">
+          {['htf_question', 'identify', 'select_candles', 'place_entry'].map((p, i) => (
+            <div key={p} className="w-6 h-1.5 rounded-full" style={{ background: ['htf_question', 'identify', 'select_candles', 'place_entry'].indexOf(phase) >= i ? '#D4A853' : '#1E1E2E' }} />
+          ))}
+        </div>
+      </div>
+
+      <HTFPanel />
+
+      <ChartCanvas
+        candles={scenario.candles}
+        highlightCandles={phase === 'select_candles' ? selectedCandles : []}
+        markers={entryPrice ? [{ type: 'entry', price: entryPrice }] : []}
+        crosshairEnabled={phase === 'place_entry'}
+        onChartClick={phase === 'select_candles' ? handleCandleClick : phase === 'place_entry' ? handleEntryClick : null}
+      />
+
+      {phase === 'identify' && (
+        <div className="mt-4 animate-slide-up">
+          <p className="text-white font-medium mb-3">Quel pattern est present sur ce chart ?</p>
+          <div className="grid grid-cols-2 gap-2">
+            {patternChoices.map(p => (
+              <div key={p} className="quiz-option dojo-card p-3 text-sm text-gray-200 text-center" onClick={() => handlePatternChoice(p)}>{p}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {phase === 'select_candles' && (
+        <div className="mt-4 animate-slide-up">
+          <p className="text-white font-medium mb-2">Tape sur les bougies cles du pattern</p>
+          <p className="text-xs text-gray-500 mb-3">Selectionne les bougies qui forment le pattern ({selectedCandles.length} selectionnees)</p>
+          <button onClick={confirmCandles} className="w-full arena-btn primary py-3 rounded-lg text-amber-400 font-medium" disabled={selectedCandles.length === 0}>Confirmer la selection ({selectedCandles.length})</button>
+        </div>
+      )}
+
+      {phase === 'place_entry' && (
+        <div className="mt-4 animate-slide-up">
+          <p className="text-white font-medium mb-2">Place l'entree optimale</p>
+          <p className="text-xs text-gray-500">Tape sur le chart au niveau ou tu entrerais</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// ARENA — QUICK DRILL MODE (PATCH 2: Better answer generation)
+// ============================================================
+
+function QuickDrill({ state, setState, onBack }) {
+  const [round, setRound] = useState(0);
+  const [totalRounds, setTotalRounds] = useState(8);
+  const [scenario, setScenario] = useState(null);
+  const [score, setScore] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const [flashClass, setFlashClass] = useState('');
+  const [isFinished, setIsFinished] = useState(false);
+  const [timer, setTimer] = useState(15);
+  const timerRef = useRef(null);
+  // PATCH 5: Show explanation on wrong answer
+  const [showExplanation, setShowExplanation] = useState(null);
+
+  const nextRound = useCallback(() => {
+    if (round >= totalRounds) {
+      setIsFinished(true);
+      // PATCH 5: Reduced XP for drill completion with daily cap
+      const xpGain = Math.min(25, score * 3 + 5);
+      const ns = { ...state };
+      if(!ns.dailyXpLog||Array.isArray(ns.dailyXpLog))ns.dailyXpLog={};const _capRem3=DAILY_XP_CAP-((ns.dailyXpLog||{})[todayStr()]||0);const _actualXp3=Math.min(xpGain,Math.max(0,_capRem3));ns.xp+=_actualXp3;ns.dailyXpLog[todayStr()]=((ns.dailyXpLog||{})[todayStr()]||0)+_actualXp3;
+      ns.arenaStats = { ...ns.arenaStats, drillsCompleted: (ns.arenaStats.drillsCompleted || 0) + 1, totalArenaXp: (ns.arenaStats.totalArenaXp || 0) + xpGain };
+      ns.rank = getRank(ns.xp);
+      if (ns.missionsDate === todayStr()) {
+        ns.dailyMissions = ns.dailyMissions.map(m => m.type === 'arena' && !m.completed ? { ...m, progress: 1, completed: true } : m);
+        ns.dailyMissions.forEach(m => { if (m.completed && !m.xpAwarded) { ns.xp += m.xp; m.xpAwarded = true; } });
+      }
+      setState(ns); saveState(ns);
+      return;
+    }
+
+    const gen = CHART_GENERATORS[Math.floor(Math.random() * CHART_GENERATORS.length)];
+    const data = gen.fn();
+
+    // PATCH 2: Use confusion map for better wrong answers
+    const patterns = ['Turtle Soup', 'Double Purge', 'CRT', 'MSS + OTE', 'FVG', 'Order Block', 'Piege / Invalide'];
+    const correctName = data.isTrap ? 'Piege / Invalide' : !data.valid && data.valid !== undefined ? 'Piege / Invalide' : patterns.find(p => data.patternName.toLowerCase().includes(p.toLowerCase().split(' ')[0].toLowerCase())) || data.patternName;
+
+    // Use confusion map to pick plausible but distinguishable wrong answers
+    const confusionList = PATTERN_CONFUSION_MAP[data.dominantPattern || data.pattern] || [];
+    let others;
+    if (confusionList.length >= 3) {
+      others = confusionList.slice(0, 3);
+    } else {
+      others = patterns.filter(p => p !== correctName).sort(() => Math.random() - 0.5).slice(0, 3);
+    }
+    const opts = [correctName, ...others].sort(() => Math.random() - 0.5);
+
+    setScenario({ ...data, options: opts, correctIdx: opts.indexOf(correctName) });
+    setAnswered(false);
+    setShowExplanation(null);
+    setTimer(15);
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimer(t => {
+        if (t <= 1) {
+          clearInterval(timerRef.current);
+          setAnswered(true);
+          setFlashClass('flash-wrong');
+          setTimeout(() => { setFlashClass(''); setRound(r => r + 1); }, 1200);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+  }, [round, totalRounds, score, state]);
+
+  useEffect(() => {
+    if (!isFinished) nextRound();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [round]);
+
+  const handleAnswer = (idx) => {
+    if (answered) return;
+    setAnswered(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+    const correct = idx === scenario.correctIdx;
+    if (correct) setScore(s => s + 1);
+    setFlashClass(correct ? 'flash-correct' : 'flash-wrong');
+
+    // PATCH 5: Show explanation briefly on wrong answer
+    if (!correct) {
+      setShowExplanation(scenario.explanation || `Reponse : ${scenario.options[scenario.correctIdx]}`);
+      setTimeout(() => { setShowExplanation(null); setFlashClass(''); setRound(r => r + 1); }, 2500);
+    } else {
+      setTimeout(() => { setFlashClass(''); setRound(r => r + 1); }, 1000);
+    }
+  };
+
+  if (isFinished) {
+    const pct = Math.round(score / totalRounds * 100);
+    return (
+      <div className="animate-slide-up text-center py-8">
+        <span className="text-5xl block mb-4">{pct >= 70 ? '\u26A1' : '\u274C'}</span>
+        <h3 className="text-2xl font-bold text-white mb-2">Quick Drill Termine</h3>
+        <p className="text-3xl font-bold mb-4" style={{ color: pct >= 70 ? '#10B981' : pct >= 40 ? '#F59E0B' : '#EF4444' }}>{score}/{totalRounds}</p>
+        <p className="text-gray-400 mb-6">{pct}% de precision</p>
+        <div className="flex gap-3 justify-center">
+          <button onClick={() => { setRound(0); setScore(0); setIsFinished(false); }} className="arena-btn primary px-6 py-3 rounded-lg text-amber-400 font-medium">Rejouer</button>
+          <button onClick={onBack} className="arena-btn px-6 py-3 rounded-lg text-gray-300 font-medium">Retour</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!scenario) return <div className="text-center py-20 text-gray-400">Chargement...</div>;
+
+  return (
+    <div className={`animate-fade-in ${flashClass}`}>
+      <div className="flex items-center gap-3 mb-3">
+        <button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button>
+        <div className="flex-1 h-1.5 bg-dojo-border rounded-full overflow-hidden">
+          <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: (round / totalRounds * 100) + '%' }} />
+        </div>
+        <span className="text-xs text-gray-500 font-mono">{round}/{totalRounds}</span>
+        <span className={`text-sm font-bold font-mono ${timer <= 5 ? 'text-red-400' : 'text-amber-400'}`}>{timer}s</span>
+      </div>
+
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-emerald-400 font-mono">{score} \u2713</span>
+        <span className="text-xs text-gray-500">Identifie le pattern rapidement !</span>
+      </div>
+
+      <ChartCanvas candles={scenario.candles} zones={[]} highlightCandles={[]} />
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {scenario.options.map((opt, i) => (
+          <div key={i} className={`quiz-option dojo-card p-3 text-sm text-center ${answered ? (i === scenario.correctIdx ? 'correct' : 'wrong') : 'text-gray-200'}`} onClick={() => handleAnswer(i)}>{opt}</div>
+        ))}
+      </div>
+
+      {/* PATCH 5: Brief explanation on wrong answer */}
+      {showExplanation && (
+        <div className="animate-slide-up dojo-card p-3 mt-3 border-red-500/30 text-center">
+          <p className="text-xs text-red-400 font-medium">{showExplanation}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// ARENA PAGE
+// ============================================================
+
+function ArenaPage({ state, setState }) {
+  const [mode, setMode] = useState(null);
+
+  if (mode === 'replay') return <TradeReplay state={state} setState={setState} onBack={() => setMode(null)} />;
+  if (mode === 'spotter') return <PatternSpotter state={state} setState={setState} onBack={() => setMode(null)} />;
+  if (mode === 'drill') return <QuickDrill state={state} setState={setState} onBack={() => setMode(null)} />;
+
+  const stats = state.arenaStats || {};
+
+  return (
+    <div className="animate-fade-in space-y-6">
+      <div className="text-center py-4">
+        <span className="text-4xl block mb-2">\u2694\uFE0F</span>
+        <h2 className="text-2xl font-bold text-white">Arena</h2>
+        <p className="text-gray-400 text-sm">Entrainement visuel interactif sur charts</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <div className="dojo-card p-3 text-center">
+          <p className="text-xl font-bold text-amber-400">{stats.replaysCompleted || 0}</p>
+          <p className="text-xs text-gray-500">Replays</p>
+        </div>
+        <div className="dojo-card p-3 text-center">
+          <p className="text-xl font-bold text-emerald-400">{stats.patternsSpotted || 0}</p>
+          <p className="text-xs text-gray-500">Patterns</p>
+        </div>
+        <div className="dojo-card p-3 text-center">
+          <p className="text-xl font-bold text-cyan-400">{stats.drillsCompleted || 0}</p>
+          <p className="text-xs text-gray-500">Drills</p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="dojo-card p-5 cursor-pointer hover:border-amber-500/30 transition-all" onClick={() => setMode('replay')}>
+          <div className="flex items-center gap-4">
+            <span className="text-3xl">&#128200;</span>
+            <div>
+              <p className="font-semibold text-white text-lg">Trade Replay</p>
+              <p className="text-sm text-gray-400">Le chart se construit bougie par bougie. Identifie les patterns, decide d'entrer ou de passer, place tes trades sur le chart.</p>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400">Bougie par bougie</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400">Interactif</span>
+          </div>
+        </div>
+
+        <div className="dojo-card p-5 cursor-pointer hover:border-emerald-500/30 transition-all" onClick={() => setMode('spotter')}>
+          <div className="flex items-center gap-4">
+            <span className="text-3xl">&#128269;</span>
+            <div>
+              <p className="font-semibold text-white text-lg">Pattern Spotter</p>
+              <p className="text-sm text-gray-400">Analyse HTF + chart complet. Identifie le pattern, selectionne les bougies cles, place l'entree optimale. 4 epreuves par chart.</p>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400">HTF Context</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Pattern ID</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400">Precision</span>
+          </div>
+        </div>
+
+        <div className="dojo-card p-5 cursor-pointer hover:border-cyan-500/30 transition-all" onClick={() => setMode('drill')}>
+          <div className="flex items-center gap-4">
+            <span className="text-3xl">\u26A1</span>
+            <div>
+              <p className="font-semibold text-white text-lg">Quick Drill</p>
+              <p className="text-sm text-gray-400">Rapid-fire ! 8 charts, 15 secondes chacun. Identifie le pattern le plus vite possible. Entrainement de reflexes.</p>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400">Chrono 15s</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400">Reflexes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PAGES (existing — Dashboard, Dojo, Skills, Challenge, Analytics, Mentor)
+// ============================================================
+
+function Dashboard({ state, setState, setPage, setSubPage }) {
+  const r=getRank(state.xp); const rk=RANKS[r]; const missions=state.dailyMissions; const completedMissions=missions.filter(m=>m.completed).length; const today=todayStr();
+  useEffect(()=>{if(state.lastActiveDate!==today){const y=new Date();y.setDate(y.getDate()-1);const yStr=y.toISOString().split('T')[0];const ns={...state,lastActiveDate:today};ns.streak=state.lastActiveDate===yStr?(state.streak||0)+1:1;ns.longestStreak=Math.max(ns.streak,state.longestStreak||0);ns.dailyMissions=generateDailyMissions(ns);ns.missionsDate=today;setState(ns);saveState(ns);}},[]);
+  return (
+    <div className="animate-fade-in space-y-6">
+      <div className="dojo-card p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5" style={{background:rk.color,filter:'blur(60px)'}}/>
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-4"><RankBadge rankIndex={r} size="lg"/><div><h1 className="text-2xl font-bold" style={{color:rk.color}}>{rk.name}</h1><p className="text-gray-400 text-sm">{rk.label} · {state.xp.toLocaleString()} XP</p></div></div>
+          <div className="flex items-center gap-6"><StreakFlame streak={state.streak}/><div className="text-center"><p className="text-2xl font-bold text-white">{state.totalQuizAnswered>0?Math.round(state.totalCorrect/state.totalQuizAnswered*100):0}%</p><p className="text-xs text-gray-500">Precision</p></div></div>
+        </div>
+        <div className="mt-4 relative z-10"><XPBar xp={state.xp}/></div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-3"><h2 className="text-lg font-semibold text-white">Missions du jour</h2><span className="text-sm text-gray-400">{completedMissions}/{missions.length}</span></div>
+        <div className="space-y-2">
+          {missions.map((m,i)=>(<div key={m.id} className={`dojo-card p-4 flex items-center justify-between ${m.completed?'mission-completed':'mission-pending'}`}><div className="flex items-center gap-3"><div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${m.completed?'bg-emerald-500/20 text-emerald-400':'bg-gray-700/50 text-gray-500'}`}>{m.completed?'\u2713':i+1}</div><span className={`text-sm ${m.completed?'text-gray-400 line-through':'text-gray-200'}`}>{m.text}</span></div><span className="text-xs font-mono text-amber-400/70">+{m.xp} XP</span></div>))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3" style={{gridTemplateColumns:'repeat(2, 1fr)'}}>
+        <button onClick={()=>{setPage('arena');}} className="dojo-card p-5 text-left hover:border-red-500/30 transition-all group border-red-500/10">
+          <span className="text-2xl mb-2 block">\u2694\uFE0F</span>
+          <p className="font-semibold text-white group-hover:text-red-400 transition-colors">Arena</p>
+          <p className="text-xs text-gray-500 mt-1">Charts interactifs</p>
+        </button>
+        <button onClick={()=>{setPage('dojo');setSubPage('quiz');}} className="dojo-card p-5 text-left hover:border-amber-500/30 transition-all group">
+          <span className="text-2xl mb-2 block">\u26A1</span>
+          <p className="font-semibold text-white group-hover:text-amber-400 transition-colors">Quiz Rapide</p>
+          <p className="text-xs text-gray-500 mt-1">Questions adaptees</p>
+        </button>
+        <button onClick={()=>{setPage('dojo');setSubPage('scenarios');}} className="dojo-card p-5 text-left hover:border-cyan-500/30 transition-all group">
+          <span className="text-2xl mb-2 block">&#127919;</span>
+          <p className="font-semibold text-white group-hover:text-cyan-400 transition-colors">Scenario</p>
+          <p className="text-xs text-gray-500 mt-1">Situations reelles</p>
+        </button>
+        <button onClick={()=>setPage('mentor')} className="dojo-card p-5 text-left hover:border-pink-500/30 transition-all group">
+          <span className="text-2xl mb-2 block">&#129504;</span>
+          <p className="font-semibold text-white group-hover:text-pink-400 transition-colors">Mentor</p>
+          <p className="text-xs text-gray-500 mt-1">Base de connaissances</p>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-4 gap-3" style={{gridTemplateColumns:'repeat(4, 1fr)'}}>
+        {[{label:'Quiz',value:state.totalQuizAnswered,color:'#F59E0B'},{label:'Streak max',value:state.longestStreak,color:'#EF4444'},{label:'Arena',value:(state.arenaStats?.replaysCompleted||0)+(state.arenaStats?.patternsSpotted||0)+(state.arenaStats?.drillsCompleted||0),color:'#06B6D4'},{label:'Concepts',value:Object.values(state.skillLevels).filter(l=>l>=3).length,color:'#10B981'}].map((s,i)=>(<div key={i} className="dojo-card p-3 text-center"><p className="text-xl font-bold" style={{color:s.color}}>{s.value}</p><p className="text-xs text-gray-500">{s.label}</p></div>))}
+      </div>
+    </div>
+  );
+}
+
+// --- QUIZ ENGINE ---
+function QuizEngine({ state, setState, onBack, branch = null }) {
+  const [questions,setQuestions]=useState([]); const [currentQ,setCurrentQ]=useState(0); const [selected,setSelected]=useState(null); const [showResult,setShowResult]=useState(false); const [sessionCorrect,setSessionCorrect]=useState(0); const [sessionTotal,setSessionTotal]=useState(0); const [consecutiveCorrect,setConsecutiveCorrect]=useState(0); const [isFinished,setIsFinished]=useState(false); const [started,setStarted]=useState(false);
+  const startQuiz=(size)=>{setQuestions(generateQuizSet(state,branch,size));setStarted(true);};
+  if(!started){return(<div className="animate-fade-in"><div className="flex items-center gap-3 mb-6"><button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button><h2 className="text-xl font-bold text-white">Taille du quiz</h2></div>{branch&&<div className="mb-4 text-sm text-gray-400">Branche : <span style={{color:SKILL_BRANCHES[branch]?.color}}>{SKILL_BRANCHES[branch]?.name}</span></div>}<div className="grid gap-3" style={{gridTemplateColumns:'repeat(2, 1fr)'}}>{[{size:10,label:'10',desc:'Rapide',color:'#10B981'},{size:15,label:'15',desc:'Standard',color:'#F59E0B'},{size:25,label:'25',desc:'Approfondi',color:'#8B5CF6'},{size:50,label:'50',desc:'Marathon',color:'#EF4444'}].map(o=>(<button key={o.size} onClick={()=>startQuiz(o.size)} className="dojo-card p-5 text-left" style={{borderColor:o.color+'30'}}><p className="text-2xl font-bold" style={{color:o.color}}>{o.size}</p><p className="text-sm text-white">{o.label} questions</p><p className="text-xs text-gray-500">{o.desc}</p></button>))}</div></div>);}
+  // PATCH 5: XP with daily cap + diminishing returns
+  const handleAnswer=(idx)=>{if(showResult)return;setSelected(idx);setShowResult(true);const q=questions[currentQ];const isC=idx===q.correct;const nC=sessionCorrect+(isC?1:0);const nCons=isC?consecutiveCorrect+1:0;setSessionTotal(sessionTotal+1);setSessionCorrect(nC);setConsecutiveCorrect(nCons);const ns={...state};ns.totalQuizAnswered=(state.totalQuizAnswered||0)+1;ns.totalCorrect=(state.totalCorrect||0)+(isC?1:0);if(!ns.conceptScores[q.concept])ns.conceptScores[q.concept]={correct:0,total:0};ns.conceptScores[q.concept].total++;if(isC)ns.conceptScores[q.concept].correct++;
+  // Daily XP cap
+  const today=todayStr();if(!ns.dailyXpLog||Array.isArray(ns.dailyXpLog))ns.dailyXpLog={};const dailyXpSoFar=ns.dailyXpLog[today]||0;const dailyDrills=((ns.dailyDrillCount||0)+1);if(ns.dailyDrillDate!==today){ns.dailyDrillCount=1;ns.dailyDrillDate=today;}else{ns.dailyDrillCount=dailyDrills;}
+  let xpGain=3+(nCons>=3?2:0);if(dailyDrills>DRILL_DIMINISH_THRESHOLD*2)xpGain=Math.ceil(xpGain/4);else if(dailyDrills>DRILL_DIMINISH_THRESHOLD)xpGain=Math.ceil(xpGain/2);xpGain=Math.min(xpGain,DAILY_XP_CAP-dailyXpSoFar);if(xpGain<0)xpGain=0;
+  if(isC){ns.xp=(state.xp||0)+xpGain;ns.dailyXpLog[today]=dailyXpSoFar+xpGain;}const cs=ns.conceptScores[q.concept];if(cs.total>=3){const ratio=cs.correct/cs.total;ns.skillLevels[q.concept]=Math.max(ns.skillLevels[q.concept]||0,ratio>=0.95?5:ratio>=0.85?4:ratio>=0.7?3:ratio>=0.5?2:ratio>=0.3?1:0);}if(ns.missionsDate===todayStr()){ns.dailyMissions=ns.dailyMissions.map(m=>{if(m.completed)return m;if(m.type==='quiz'&&m.branch===q.branch){const p=(m.progress||0)+(isC?1:0);return{...m,progress:p,completed:p>=m.target};}if(m.type==='total_quiz'){const p=(m.progress||0)+1;return{...m,progress:p,completed:p>=m.target};}if(m.type==='streak_quiz')return{...m,progress:Math.max(m.progress||0,nCons),completed:nCons>=m.target};return m;});ns.dailyMissions.forEach(m=>{if(m.completed&&!m.xpAwarded){ns.xp+=m.xp;m.xpAwarded=true;}});}ns.rank=getRank(ns.xp);setState(ns);saveState(ns);};
+  const nextQuestion=()=>{if(currentQ+1>=questions.length){setIsFinished(true);const pct=Math.round(sessionCorrect/sessionTotal*100);const ns={...state};if(ns.missionsDate===todayStr()){ns.dailyMissions=ns.dailyMissions.map(m=>(m.type==='score'&&pct>=m.target&&!m.completed?{...m,progress:pct,completed:true}:m));ns.dailyMissions.forEach(m=>{if(m.completed&&!m.xpAwarded){ns.xp+=m.xp;m.xpAwarded=true;}});ns.rank=getRank(ns.xp);setState(ns);saveState(ns);}return;}setCurrentQ(currentQ+1);setSelected(null);setShowResult(false);};
+  if(questions.length===0)return<div className="text-center py-20 text-gray-400">Chargement...</div>;
+  if(isFinished){const pct=sessionTotal>0?Math.round(sessionCorrect/sessionTotal*100):0;const gc=pct>=90?'#10B981':pct>=80?'#3B82F6':pct>=70?'#F59E0B':'#EF4444';return(<div className="animate-slide-up text-center py-10"><div className="relative inline-block mb-6"><ProgressRing radius={60} stroke={6} progress={pct} color={gc}/><div className="absolute inset-0 flex items-center justify-center"><span className="text-3xl font-bold" style={{color:gc}}>{pct}%</span></div></div><p className="text-gray-400 mb-8">{sessionCorrect}/{sessionTotal}</p><div className="flex gap-3 justify-center"><button onClick={()=>{setStarted(false);setCurrentQ(0);setSelected(null);setShowResult(false);setSessionCorrect(0);setSessionTotal(0);setConsecutiveCorrect(0);setIsFinished(false);}} className="px-6 py-3 bg-amber-500/20 text-amber-400 rounded-lg font-medium">Recommencer</button><button onClick={onBack} className="px-6 py-3 bg-dojo-border text-gray-300 rounded-lg font-medium">Retour</button></div></div>);}
+  const q=questions[currentQ];
+  return(<div className="animate-fade-in"><div className="flex items-center gap-3 mb-6"><button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button><div className="flex-1 h-1.5 bg-dojo-border rounded-full overflow-hidden"><div className="h-full bg-amber-500 rounded-full transition-all" style={{width:((currentQ+1)/questions.length*100)+'%'}}/></div><span className="text-xs text-gray-500 font-mono">{currentQ+1}/{questions.length}</span><span className="text-xs text-emerald-400 font-mono">{sessionCorrect}\u2713</span></div>{consecutiveCorrect>=3&&<div className="text-center mb-3 text-amber-400 text-sm font-medium">&#128293; Streak x{consecutiveCorrect}</div>}<div className="dojo-card p-6 mb-4"><div className="flex items-center gap-2 mb-3"><span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{background:SKILL_BRANCHES[q.branch]?.color+'20',color:SKILL_BRANCHES[q.branch]?.color}}>{SKILL_BRANCHES[q.branch]?.name}</span></div><p className="text-white text-lg font-medium">{q.q}</p></div><div className="space-y-2 mb-4">{q.options.map((opt,i)=>{let cl='quiz-option dojo-card p-4';if(showResult){if(i===q.correct)cl+=' correct';else if(i===selected)cl+=' wrong';}return(<div key={i} className={cl} onClick={()=>handleAnswer(i)}><div className="flex items-start gap-3"><div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${showResult&&i===q.correct?'bg-emerald-500/30 text-emerald-400':showResult&&i===selected?'bg-red-500/30 text-red-400':'bg-dojo-border text-gray-400'}`}>{String.fromCharCode(65+i)}</div><span className="text-sm text-gray-200">{opt}</span></div></div>);})}</div>{showResult&&(<div className={`animate-slide-up dojo-card p-4 mb-4 ${selected===q.correct?'border-emerald-500/30':'border-red-500/30'}`}><p className={`text-sm font-medium mb-1 ${selected===q.correct?'text-emerald-400':'text-red-400'}`}>{selected===q.correct?'\u2713 Correct':'\u2717 Incorrect'}</p><p className="text-sm text-gray-300">{q.explanation}</p></div>)}{showResult&&(<button onClick={nextQuestion} className="w-full py-3 bg-amber-500/20 text-amber-400 rounded-lg font-medium hover:bg-amber-500/30">{currentQ+1>=questions.length?'Resultats':'Suivante \u2192'}</button>)}</div>);
+}
+
+// --- SCENARIO ENGINE ---
+function ScenarioEngine({state,setState,onBack}) {
+  const [cs,setCs]=useState(null);const [step,setStep]=useState(0);const [sel,setSel]=useState(null);const [showFb,setShowFb]=useState(false);const [score,setScore]=useState(0);const [answers,setAnswers]=useState([]);const [done,setDone]=useState(false);
+  const r=getRank(state.xp);const available=SCENARIOS_DB.filter(s=>{const ri=RANKS.findIndex(rk=>rk.id===s.rank);return ri<=r+1;});
+  if(!cs){return(<div className="animate-fade-in"><div className="flex items-center gap-3 mb-6"><button onClick={onBack} className="text-gray-400 hover:text-white">\u2190</button><h2 className="text-xl font-bold text-white">Scenarios</h2></div><div className="space-y-3">{available.map(s=>{const d=state.completedScenarios[s.id];const ri=RANKS.findIndex(rk=>rk.id===s.rank);return(<div key={s.id} className="dojo-card p-5 cursor-pointer hover:border-cyan-500/30" onClick={()=>setCs(s)}><div className="flex items-center justify-between"><div><div className="flex items-center gap-2 mb-1"><span className="text-white font-semibold">{s.title}</span>{d&&<span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">\u2713</span>}</div><p className="text-sm text-gray-400">{s.steps.length} etapes</p></div><span className="text-xs px-2 py-1 rounded" style={{background:RANKS[ri].color+'20',color:RANKS[ri].color}}>{s.rank}</span></div></div>);})}</div></div>);}
+  // PATCH 4: Scenario XP reduced
+  if(done){const pct=Math.round(score/cs.steps.length*100);return(<div className="animate-slide-up text-center py-10"><h2 className="text-2xl font-bold text-white mb-2">{cs.title}</h2><p className="text-4xl font-bold mb-2" style={{color:pct>=75?'#10B981':pct>=50?'#F59E0B':'#EF4444'}}>{pct}%</p><p className="text-gray-400 mb-6">{score}/{cs.steps.length}</p><button onClick={()=>{setCs(null);setStep(0);setSel(null);setShowFb(false);setScore(0);setAnswers([]);setDone(false);}} className="px-6 py-3 bg-dojo-border text-gray-300 rounded-lg font-medium">Retour</button></div>);}
+  const st=cs.steps[step];
+  const handleStepAnswer=(idx)=>{if(showFb)return;setSel(idx);setShowFb(true);const ok=idx===st.correct;if(ok)setScore(score+1);setAnswers([...answers,{step,selected:idx,correct:st.correct,isCorrect:ok}]);if(ok){const ns={...state};if(!ns.dailyXpLog||Array.isArray(ns.dailyXpLog))ns.dailyXpLog={};const _cr4=DAILY_XP_CAP-((ns.dailyXpLog||{})[todayStr()]||0);const _ax4=Math.min(3,Math.max(0,_cr4));ns.xp+=_ax4;ns.dailyXpLog[todayStr()]=((ns.dailyXpLog||{})[todayStr()]||0)+_ax4;ns.rank=getRank(ns.xp);setState(ns);saveState(ns);}};
+  const nextStep=()=>{if(step+1>=cs.steps.length){const ns={...state};ns.completedScenarios[cs.id]={score,date:todayStr()};if(!ns.dailyXpLog||Array.isArray(ns.dailyXpLog))ns.dailyXpLog={};const _cr5=DAILY_XP_CAP-((ns.dailyXpLog||{})[todayStr()]||0);const _ax5=Math.min(cs.xpReward,Math.max(0,_cr5));ns.xp+=_ax5;ns.dailyXpLog[todayStr()]=((ns.dailyXpLog||{})[todayStr()]||0)+_ax5;ns.rank=getRank(ns.xp);if(ns.missionsDate===todayStr()){ns.dailyMissions=ns.dailyMissions.map(m=>m.type==='scenario'&&!m.completed?{...m,progress:1,completed:true}:m);ns.dailyMissions.forEach(m=>{if(m.completed&&!m.xpAwarded){ns.xp+=m.xp;m.xpAwarded=true;}});}setState(ns);saveState(ns);setDone(true);return;}setStep(step+1);setSel(null);setShowFb(false);};
+  return(<div className="animate-fade-in"><div className="flex items-center gap-3 mb-4"><button onClick={()=>{setCs(null);setStep(0);setSel(null);setShowFb(false);setScore(0);setAnswers([]);}} className="text-gray-400 hover:text-white">\u2190</button><div className="flex-1 h-1.5 bg-dojo-border rounded-full overflow-hidden"><div className="h-full bg-cyan-500 rounded-full transition-all" style={{width:((step+1)/cs.steps.length*100)+'%'}}/></div><span className="text-xs text-gray-500 font-mono">{step+1}/{cs.steps.length}</span></div>{step===0&&!showFb&&<div className="dojo-card p-4 mb-4 border-cyan-500/20"><p className="text-xs text-cyan-400 font-medium mb-1">CONTEXTE</p><p className="text-sm text-gray-300">{cs.context}</p></div>}<div className="dojo-card p-5 mb-4"><p className="text-white font-medium">{st.q}</p></div><div className="space-y-2 mb-4">{st.options.map((opt,i)=>{let cl='quiz-option dojo-card p-4';if(showFb){if(i===st.correct)cl+=' correct';else if(i===sel)cl+=' wrong';}return<div key={i} className={cl} onClick={()=>handleStepAnswer(i)}><span className="text-sm text-gray-200">{opt}</span></div>;})}</div>{showFb&&(<><div className={`animate-slide-up dojo-card p-4 mb-4 ${sel===st.correct?'border-emerald-500/30':'border-red-500/30'}`}><p className={`text-sm ${sel===st.correct?'text-emerald-400':'text-red-400'}`}>{st.feedback}</p></div><button onClick={nextStep} className="w-full py-3 bg-cyan-500/20 text-cyan-400 rounded-lg font-medium">{step+1>=cs.steps.length?'Resultats':'Suivante \u2192'}</button></>)}</div>);
+}
+
+// --- DOJO PAGE ---
+function RadiantChallenges({ state, setState, onBack }) {
+  const r = getRank(state.xp);
+  return (
+    <div className="animate-fade-in space-y-4">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="text-gray-400 hover:text-white">{'\u2190'}</button>
+        <h2 className="text-xl font-bold text-white">{'\u2726'} Defis Radiant</h2>
+      </div>
+      <p className="text-sm text-gray-400 mb-4">Defis reserves aux traders Diamond+. Chaque defi teste ta maitrise complete du systeme.</p>
+      <div className="space-y-3">
+        {RADIANT_CHALLENGES.map(ch => {
+          const reqRank = RANKS.findIndex(rk => rk.id === ch.rank);
+          const locked = r < reqRank;
+          return (
+            <div key={ch.id} className={`dojo-card p-5 ${locked ? 'opacity-40' : 'hover:border-yellow-500/30 cursor-pointer'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white font-semibold">{ch.title}</span>
+                <div className="flex items-center gap-2">
+                  {ch.timeLimit && <span className="text-xs text-red-400 font-mono">{ch.timeLimit}s</span>}
+                  <span className="text-xs px-2 py-1 rounded" style={{ background: RANKS[reqRank]?.color + '20', color: RANKS[reqRank]?.color }}>{ch.rank}</span>
+                  <span className="text-xs font-mono text-amber-400">+{ch.xpReward} XP</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-400">{ch.description}</p>
+              {locked && <p className="text-xs text-red-400 mt-2">Rang {RANKS[reqRank]?.name} requis</p>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DojoPage({state,setState,subPage,setSubPage}) {
+  if(subPage==='quiz')return<QuizEngine state={state} setState={setState} onBack={()=>setSubPage(null)}/>;
+  if(subPage==='scenarios')return<ScenarioEngine state={state} setState={setState} onBack={()=>setSubPage(null)}/>;
+  if(subPage==='radiant')return<RadiantChallenges state={state} setState={setState} onBack={()=>setSubPage(null)}/>;
+  if(subPage&&subPage.startsWith('quiz_'))return<QuizEngine state={state} setState={setState} onBack={()=>setSubPage(null)} branch={subPage.replace('quiz_','')}/>;
+  return(<div className="animate-fade-in space-y-6"><h2 className="text-xl font-bold text-white">Dojo</h2><div className="space-y-3"><div className="dojo-card p-5 cursor-pointer hover:border-amber-500/30" onClick={()=>setSubPage('quiz')}><div className="flex items-center gap-4"><span className="text-3xl">\u26A1</span><div><p className="font-semibold text-white text-lg">Quiz Adaptatif</p><p className="text-sm text-gray-400">{QUIZ_DB.length} fixes + {QUIZ_TEMPLATES.length} templates</p></div></div></div><div className="dojo-card p-5 cursor-pointer hover:border-cyan-500/30" onClick={()=>setSubPage('scenarios')}><div className="flex items-center gap-4"><span className="text-3xl">&#127919;</span><div><p className="font-semibold text-white text-lg">Scenarios</p><p className="text-sm text-gray-400">{SCENARIOS_DB.length} situations reelles</p></div></div></div>{getRank(state.xp) >= 5 && (<div className="dojo-card p-5 cursor-pointer hover:border-yellow-500/30" onClick={() => setSubPage('radiant')}><div className="flex items-center gap-4"><span className="text-3xl">{'\u2726'}</span><div><p className="font-semibold text-white text-lg">Defis Radiant</p><p className="text-sm text-gray-400">{RADIANT_CHALLENGES.length} defis experts — Diamond+ requis</p></div></div></div>)}</div><div><h3 className="text-sm text-gray-400 font-medium mb-3">PAR BRANCHE</h3><div className="grid gap-2" style={{gridTemplateColumns:'repeat(2, 1fr)'}}>{Object.entries(SKILL_BRANCHES).map(([key,branch])=>{const avg=branch.concepts.reduce((s,c)=>s+(state.skillLevels[c.id]||0),0)/branch.concepts.length;return(<div key={key} className="dojo-card p-4 cursor-pointer" style={{borderColor:branch.color+'30'}} onClick={()=>setSubPage('quiz_'+key)}><div className="flex items-center gap-2 mb-2"><span>{branch.icon}</span><span className="font-medium text-sm text-white">{branch.name}</span></div><div className="h-1.5 bg-dojo-border rounded-full overflow-hidden"><div className="h-full rounded-full" style={{width:(avg/5*100)+'%',background:branch.color}}/></div></div>);})}</div></div></div>);
+}
+
+// --- SKILL TREE ---
+function SkillTree({state}) {
+  return(<div className="animate-fade-in space-y-6"><h2 className="text-xl font-bold text-white">Skill Tree</h2>{Object.entries(SKILL_BRANCHES).map(([key,branch])=>(<div key={key} className="dojo-card p-5"><div className="flex items-center gap-3 mb-4"><span className="text-2xl">{branch.icon}</span><h3 className="font-semibold text-white">{branch.name}</h3></div><div className="space-y-3">{branch.concepts.map(concept=>{const level=state.skillLevels[concept.id]||0;const sc=state.conceptScores[concept.id];const acc=sc?Math.round(sc.correct/sc.total*100):0;const tot=sc?sc.total:0;return(<div key={concept.id} className="flex items-center gap-3"><div className="flex gap-0.5">{[1,2,3,4,5].map(l=><div key={l} className="w-2 h-6 rounded-sm" style={{background:l<=level?branch.color:'#1E1E2E'}}/>)}</div><div className="flex-1 min-w-0"><div className="flex items-center justify-between"><span className="text-sm text-gray-200 truncate">{concept.name}</span><span className="text-xs font-mono" style={{color:acc>=80?'#10B981':acc>=60?'#F59E0B':acc>0?'#EF4444':'#4B5563'}}>{tot>0?acc+'%':'\u2014'}</span></div><p className="text-xs text-gray-600 truncate">{concept.desc}</p></div></div>);})}</div></div>))}</div>);
+}
+
+// --- MENTOR PAGE ---
+function MentorPage() {
+  const [search,setSearch]=useState('');const [selectedCat,setSelectedCat]=useState(null);const [expanded,setExpanded]=useState(null);
+  const filtered=KNOWLEDGE_BASE.filter(kb=>{const ms=!search||kb.name.toLowerCase().includes(search.toLowerCase())||kb.shortDesc.toLowerCase().includes(search.toLowerCase());const mc=!selectedCat||kb.category===selectedCat;return ms&&mc;});
+  return(<div className="animate-fade-in space-y-6"><h2 className="text-xl font-bold text-white">&#129504; Mentor</h2><div className="relative"><input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher..." className="w-full bg-dojo-card border border-dojo-border rounded-lg px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-amber-500/50"/></div><div className="flex gap-2 flex-wrap"><button onClick={()=>setSelectedCat(null)} className={`px-3 py-1.5 rounded-full text-xs font-medium ${!selectedCat?'bg-amber-500/20 text-amber-400 border border-amber-500/30':'bg-dojo-card text-gray-400 border border-dojo-border'}`}>Tout</button>{KB_CATEGORIES.map(cat=>(<button key={cat.id} onClick={()=>setSelectedCat(selectedCat===cat.id?null:cat.id)} className={`px-3 py-1.5 rounded-full text-xs font-medium ${selectedCat===cat.id?'border':'bg-dojo-card text-gray-400 border border-dojo-border'}`} style={selectedCat===cat.id?{background:cat.color+'20',color:cat.color,borderColor:cat.color+'50'}:{}}>{cat.icon} {cat.name}</button>))}</div><div className="space-y-3">{filtered.map(kb=>{const cat=KB_CATEGORIES.find(c=>c.id===kb.category);const isExp=expanded===kb.id;return(<div key={kb.id} className={`dojo-card kb-card ${isExp?'':'p-5'}`} onClick={()=>setExpanded(isExp?null:kb.id)} style={isExp?{borderColor:cat?.color+'40'}:{}}>{!isExp?(<><div className="flex items-center gap-2 mb-2"><span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{background:cat?.color+'20',color:cat?.color}}>{cat?.name}</span></div><h3 className="text-white font-semibold mb-1">{kb.name}</h3><p className="text-sm text-gray-400">{kb.shortDesc}</p></>):(<div className="p-5 space-y-4" onClick={e=>e.stopPropagation()}><div className="flex items-center justify-between"><span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{background:cat?.color+'20',color:cat?.color}}>{cat?.name}</span><button onClick={()=>setExpanded(null)} className="text-gray-500 hover:text-white text-sm">\u2717</button></div><h3 className="text-xl font-bold text-white">{kb.name}</h3><p className="text-sm text-gray-300">{kb.fullDesc}</p><div><h4 className="text-xs text-amber-400 font-semibold uppercase mb-2">Regles</h4><ul className="space-y-1">{kb.rules.map((r,i)=><li key={i} className="text-sm text-gray-300 flex items-start gap-2"><span className="text-amber-400 text-xs">&#9654;</span>{r}</li>)}</ul></div><div><h4 className="text-xs text-red-400 font-semibold uppercase mb-2">Erreurs</h4><ul className="space-y-1">{kb.mistakes.map((m,i)=><li key={i} className="text-sm text-gray-400 flex items-start gap-2"><span className="text-red-400 text-xs">&#9888;</span>{m}</li>)}</ul></div></div>)}</div>);})}</div></div>);
+}
+
+// --- CHALLENGE ---
+function Challenge30({state,setState}) {
+  const startChallenge=()=>{const ns={...state,challengeStartDate:todayStr(),challengeDay:1,challengeCompleted:{}};setState(ns);saveState(ns);};
+  const challengeActive=state.challengeStartDate!=null;const challengeDay=challengeActive?Math.min(30,Math.floor((Date.now()-new Date(state.challengeStartDate).getTime())/86400000)+1):0;
+  const toggleObjective=(day,objIdx)=>{const ns={...state};const key='day_'+day;if(!ns.challengeCompleted[key])ns.challengeCompleted[key]={completed:false,date:todayStr(),objectives:[]};const objs=[...(ns.challengeCompleted[key].objectives||[])];objs[objIdx]=!objs[objIdx];ns.challengeCompleted[key].objectives=objs;const dayData=CHALLENGE_30[day-1];const allDone=dayData.objectives.every((_,i)=>objs[i]);ns.challengeCompleted[key].completed=allDone;if(allDone&&!ns.challengeCompleted[key].xpAwarded){if(!ns.dailyXpLog||Array.isArray(ns.dailyXpLog))ns.dailyXpLog={};const _cr7=DAILY_XP_CAP-((ns.dailyXpLog||{})[todayStr()]||0);const _ax7=Math.min(dayData.xp,Math.max(0,_cr7));ns.xp+=_ax7;ns.dailyXpLog[todayStr()]=((ns.dailyXpLog||{})[todayStr()]||0)+_ax7;ns.challengeCompleted[key].xpAwarded=true;ns.rank=getRank(ns.xp);}setState(ns);saveState(ns);};
+  if(!challengeActive){return(<div className="animate-fade-in text-center py-16"><span className="text-6xl block mb-6">&#127942;</span><h2 className="text-3xl font-bold text-white mb-3">30-Day Challenge</h2><p className="text-gray-400 mb-8">30 jours pour devenir discipline.</p><button onClick={startChallenge} className="px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold rounded-xl text-lg">Commencer</button></div>);}
+  const weekColors=['#8B5CF6','#06B6D4','#F59E0B','#EF4444'];const weekNames=['Fondations','Repetition','Precision','Transition'];
+  return(<div className="animate-fade-in space-y-6"><div className="flex items-center justify-between"><h2 className="text-xl font-bold text-white">30-Day Challenge</h2><span className="text-amber-400 font-bold">Jour {challengeDay}/30</span></div><div className="dojo-card p-4"><div className="h-3 bg-dojo-border rounded-full overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-purple-500 via-cyan-500 to-red-500 transition-all" style={{width:(challengeDay/30*100)+'%'}}/></div></div>{[1,2,3,4].map(week=>(<div key={week}><h3 className="text-sm font-medium mb-3" style={{color:weekColors[week-1]}}>S{week} — {weekNames[week-1]}</h3><div className="space-y-2">{CHALLENGE_30.filter(d=>d.week===week).map(day=>{const key='day_'+day.day,data=state.challengeCompleted[key]||{objectives:[]};const isCurrent=day.day===challengeDay,isPast=day.day<challengeDay,isFuture=day.day>challengeDay,isComplete=data.completed;return(<div key={day.day} className={`dojo-card p-4 ${isCurrent?'border-amber-500/40':''} ${isFuture?'opacity-50':''}`}><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${isComplete?'bg-emerald-500/20 text-emerald-400':isCurrent?'bg-amber-500/20 text-amber-400':'bg-dojo-border text-gray-500'}`}>{isComplete?'\u2713':day.day}</div><span className={`font-medium text-sm ${isCurrent?'text-white':'text-gray-400'}`}>{day.title}</span></div><span className="text-xs font-mono text-amber-400/50">+{day.xp}</span></div>{(isCurrent||isPast)&&<div className="space-y-1.5 ml-9">{day.objectives.map((obj,i)=>{const dn=data.objectives[i];return(<div key={i} className="flex items-center gap-2 cursor-pointer" onClick={()=>!isFuture&&toggleObjective(day.day,i)}><div className={`w-4 h-4 rounded border flex items-center justify-center text-xs ${dn?'bg-emerald-500/20 border-emerald-500 text-emerald-400':'border-gray-600'}`}>{dn?'\u2713':''}</div><span className={`text-xs ${dn?'text-gray-500 line-through':'text-gray-300'}`}>{obj}</span></div>);})}</div>}</div>);})}</div></div>))}</div>);
+}
+
+// --- ANALYTICS (PATCH 4: Reset Progress button) ---
+function Analytics({state,setState}) {
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const branches=Object.entries(SKILL_BRANCHES);const branchScores=branches.map(([key,branch])=>{const scores=branch.concepts.map(c=>{const s=state.conceptScores[c.id];return(!s||s.total===0)?0:s.correct/s.total*100;});return{key,name:branch.name,icon:branch.icon,color:branch.color,avg:Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)};});
+  const handleCSVImport=(e)=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=(ev)=>{try{const lines=ev.target.result.split('\n');const headers=lines[0].split(',').map(h=>h.trim().toLowerCase());const trades=lines.slice(1).filter(l=>l.trim()).map(line=>{const vals=line.split(',');const obj={};headers.forEach((h,i)=>obj[h]=vals[i]?.trim());return obj;});const ns={...state,trades:[...state.trades,...trades]};setState(ns);saveState(ns);}catch(err){}};reader.readAsText(file);};
+
+  const handleResetProgress = () => {
+    const ns = defaultState();
+    // Preserve settings/preferences but reset XP and progress
+    ns.lastActiveDate = todayStr();
+    ns.streak = 1;
+    ns.dailyMissions = generateDailyMissions(ns);
+    ns.missionsDate = todayStr();
+    setState(ns);
+    saveState(ns);
+    setShowResetConfirm(false);
+  };
+
+  return(<div className="animate-fade-in space-y-6"><h2 className="text-xl font-bold text-white">Analytics</h2><div className="grid gap-3" style={{gridTemplateColumns:'repeat(3, 1fr)'}}><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-amber-400">{state.totalQuizAnswered}</p><p className="text-xs text-gray-500">Quiz</p></div><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-emerald-400">{state.totalQuizAnswered>0?Math.round(state.totalCorrect/state.totalQuizAnswered*100):0}%</p><p className="text-xs text-gray-500">Precision</p></div><div className="dojo-card p-4 text-center"><p className="text-2xl font-bold text-purple-400">{(state.arenaStats?.totalArenaXp||0)}</p><p className="text-xs text-gray-500">Arena XP</p></div></div><div className="dojo-card p-5"><h3 className="text-sm text-gray-400 font-medium mb-4">FORCES & FAIBLESSES</h3><div className="space-y-3">{branchScores.map(b=>(<div key={b.key}><div className="flex items-center justify-between mb-1"><span className="text-sm text-gray-300">{b.icon} {b.name}</span><span className="text-sm font-mono" style={{color:b.avg>=80?'#10B981':b.avg>=60?'#F59E0B':b.avg>0?'#EF4444':'#4B5563'}}>{b.avg}%</span></div><div className="h-2 bg-dojo-border rounded-full overflow-hidden"><div className="h-full rounded-full" style={{width:b.avg+'%',background:b.color}}/></div></div>))}</div></div><div className="dojo-card p-5"><h3 className="text-sm text-gray-400 font-medium mb-3">IMPORT CSV</h3><label className="inline-block px-4 py-2 bg-dojo-border text-gray-300 rounded-lg cursor-pointer hover:bg-dojo-hover text-sm">Importer <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport}/></label>{state.trades.length>0&&<p className="text-xs text-emerald-400 mt-2">{state.trades.length} trades</p>}</div>
+
+    {/* PATCH 4: Reset Progress */}
+    <div className="dojo-card p-5 border-red-500/10">
+      <h3 className="text-sm text-gray-400 font-medium mb-3">RESET</h3>
+      {!showResetConfirm ? (
+        <button onClick={() => setShowResetConfirm(true)} className="px-4 py-2 bg-red-500/10 text-red-400 rounded-lg text-sm hover:bg-red-500/20 border border-red-500/20">
+          Reset Progress
+        </button>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm text-red-400">Confirmer le reset ? XP, rank, quiz, arena, challenge seront remis a zero.</p>
+          <div className="flex gap-2">
+            <button onClick={handleResetProgress} className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold border border-red-500/30">Confirmer Reset</button>
+            <button onClick={() => setShowResetConfirm(false)} className="px-4 py-2 bg-dojo-border text-gray-400 rounded-lg text-sm">Annuler</button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>);
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+
+function App() {
+  const [state, setState] = useState(loadState);
+  const [page, setPage] = useState('dashboard');
+  const [subPage, setSubPage] = useState(null);
+
+  useEffect(() => {
+    const today = todayStr();
+    if (state.missionsDate !== today || state.dailyMissions.length === 0) {
+      const ns = { ...state };
+      if (state.lastActiveDate) {
+        const y = new Date(); y.setDate(y.getDate() - 1);
+        // PATCH 5: +2 XP per streak day with daily cap
+        ns.streak = state.lastActiveDate === y.toISOString().split('T')[0] ? (state.streak || 0) + 1 : state.lastActiveDate === today ? state.streak : 1;
+        if (ns.streak > 1) {
+          if(!ns.dailyXpLog||Array.isArray(ns.dailyXpLog))ns.dailyXpLog={};const _cr6=DAILY_XP_CAP-((ns.dailyXpLog||{})[today]||0);const _ax6=Math.min(2,Math.max(0,_cr6));ns.xp=(ns.xp||0)+_ax6;ns.dailyXpLog[today]=((ns.dailyXpLog||{})[today]||0)+_ax6;
+        }
+      } else { ns.streak = 1; }
+      ns.lastActiveDate = today;
+      ns.longestStreak = Math.max(ns.streak, state.longestStreak || 0);
+      ns.dailyMissions = generateDailyMissions(ns);
+      ns.missionsDate = today;
+      ns.rank = getRank(ns.xp);
+      setState(ns); saveState(ns);
+    }
+  }, []);
+
+  const r = getRank(state.xp);
+  const rk = RANKS[r];
+
+  const pages = [
+    { id: 'dashboard', label: 'Home', icon: '\u2B21' },
+    { id: 'arena', label: 'Arena', icon: '\u2694\uFE0F' },
+    { id: 'dojo', label: 'Dojo', icon: '\u26A1' },
+    { id: 'mentor', label: 'Mentor', icon: '\uD83E\uDDE0' },
+    { id: 'skills', label: 'Skills', icon: '\uD83C\uDF33' },
+    { id: 'challenge', label: '30 Days', icon: '\uD83C\uDFC6' },
+    { id: 'analytics', label: 'Stats', icon: '\uD83D\uDCCA' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-dojo">
+      <div className="sticky top-0 z-50 bg-dojo/90 backdrop-blur-md border-b border-dojo-border">
+        <div className="max-w-3xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-bold" style={{ color: rk.color }}>700S</span>
+              <span className="text-lg font-bold text-white">DOJO</span>
+              <span className="text-xs text-gray-600 font-mono">v4</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <StreakFlame streak={state.streak} />
+              <RankBadge rankIndex={r} size="sm" />
+              <span className="text-xs font-mono text-amber-400">{state.xp} XP</span>
+            </div>
+          </div>
+          <div className="flex gap-1 mt-2 nav-scroll -mx-4 px-4">
+            {pages.map(p => (
+              <button key={p.id} className={`nav-item px-3 py-1.5 text-sm font-medium whitespace-nowrap ${page === p.id ? 'active text-amber-400' : 'text-gray-500'}`} onClick={() => { setPage(p.id); setSubPage(null); }}>
+                <span className="mr-1">{p.icon}</span>{p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {page === 'dashboard' && <Dashboard state={state} setState={setState} setPage={setPage} setSubPage={setSubPage} />}
+        {page === 'arena' && <ArenaPage state={state} setState={setState} />}
+        {page === 'dojo' && <DojoPage state={state} setState={setState} subPage={subPage} setSubPage={setSubPage} />}
+        {page === 'mentor' && <MentorPage />}
+        {page === 'skills' && <SkillTree state={state} />}
+        {page === 'challenge' && <Challenge30 state={state} setState={setState} />}
+        {page === 'analytics' && <Analytics state={state} setState={setState} />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
